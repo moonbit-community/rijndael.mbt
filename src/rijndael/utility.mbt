@@ -37,3 +37,12 @@ test "utility" {
     ),
   )
 }
+
+///|
+const MAXKC : Int = 256 / 32
+
+///|
+const MAXKB : Int = 256 / 8
+
+///|
+const MAXNR : Int = 14
