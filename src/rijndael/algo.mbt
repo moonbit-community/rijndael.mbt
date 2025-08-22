@@ -121,6 +121,25 @@ test "basic test" {
       #|b"\x33\x32\x31\x30\x37\x36\x35\x34\x42\x41\x39\x38\x46\x45\x44\x43\x29\x68\x5f\x2a\x1e\x5e\x6a\x1e\x5c\x1f\x53\x26\x1a\x5a\x17\x65\x64\xca\xe1\xd8\x7a\x94\x8b\xc6\x26\x8b\xd8\xe0\x3c\xd1\xcf\x85\xf3\x21\xdf\x56\x89\xb5\x54\x90\xaf\x3e\x8c\x70\x93\xef\x43\xf5\x15\xfd\x00\x44\x9c\x48\x54\xd4\x33\x76\xd8\xa4\xa0\x99\x9b\x51\xc4\x1d\xee\x40\x58\x55\xba\x94\x6b\x23\x62\x30\xcb\xba\xf9\x61\x2b\x02\x1a\xf9\x73\x57\xa0\x6d\x18\x74\xc2\x5d\xd3\xce\x3b\x3c\xc0\x64\x91\x5b\xb3\x33\x31\x36\xab\x47\xf3\x6b\x78\x89\xc8\x57\x9b\xd8\x36\x33\x28\xeb\x07\x05\x83\xac\xf4\x6e\xfb\x25\x3c\x39\x89\xd7\x09\xc3\xa1\x3c\x0e\xc6\x22\x90\xfa\xa8\xd9\xb5\xc6\x91\x08\xe2\xdc\x41\xa9\xde\xd2\x87\x8b\x4e\x28\x2f\x52\xfb\xee\xbe\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0a"
     ),
   )
+  inspect(encrypt_cooked.length(), content="241")
+
+  // 16 bytes
+  let plaintext : Bytes = "Time is precious"
+  inspect(plaintext.length(), content="16")
+  inspect(
+    plaintext,
+    content=(
+      #|b"\x54\x69\x6d\x65\x20\x69\x73\x20\x70\x72\x65\x63\x69\x6f\x75\x73"
+    ),
+  )
+  let ciphertext = Bytes::make(16, 0)
+  camlpdf_caml_aes_encrypt(encrypt_cooked, plaintext, 0, ciphertext, 0)
+  inspect(
+    ciphertext,
+    content=(
+      #|b"\xf3\x97\x09\xdf\x2c\xdb\x87\x42\x40\x47\xba\x4e\x28\x66\x14\xb3"
+    ),
+  )
 }
 
 ///|
@@ -280,4 +299,133 @@ test "camlpdf_caml_aes_cook_decrypt_key" {
       #|b"\x34\x6f\x22\x5c\xc4\xf6\x18\x60\xac\x38\xa4\x76\x1c\x27\xf1\x81\x19\x3e\x46\x9b\xd3\xeb\x7d\x8f\x1e\x28\xb9\x29\x1d\x00\x2d\x45\xc3\x8a\x9c\xc3\x4c\xd3\x58\xa8\x85\xb8\x49\x78\xe2\xb2\x1d\x40\xcb\x7a\xf2\x0a\xca\xd5\x3b\x14\xcd\xc3\xc4\xa6\x03\x28\x94\x6c\x25\xa6\xdf\x42\x8f\x59\xc4\x6b\xc9\x6b\x11\xd0\x67\x0a\x54\x38\x62\xc9\x4d\x16\x01\xaf\xc9\x1e\x07\x16\xff\xb2\xce\xeb\x50\xca\x7b\x7e\xbf\xdd\xaa\xff\x1b\x29\x46\x32\xd5\xbb\xae\x61\x45\xe8\x9e\x0b\xff\x60\x63\x66\x84\x08\x06\xb9\x36\xac\xc9\xfd\xaf\x78\xd3\x31\xf0\x02\xd1\x81\xa4\xf4\xec\xcd\xce\x92\xe8\x53\x90\x53\x98\x72\x91\xac\xfd\x6d\x7b\x68\x65\xdf\xb2\xa4\xcf\x44\x99\xd4\xb3\x80\xdd\x83\x02\xb0\x54\xf6\x3d\x4c\x6a\x66\x04\x9e\x5e\xc1\x36\x51\xa0\xbf\x65\x1f\xea\xc4\x98\xb2\xc9\xcc\xaa\x9b\x2b\x70\x59\x80\xb4\x67\xb1\x30\x89\x75\x3f\xfc\x3e\x90\x39\xd2\x34\xa7\x25\x26\xe0\xa1\x53\x4e\x4a\x7b\xfd\xad\x23\x08\x32\x29\xe2\xbc\x41\x72\x68\x34\x70\x77\x4b\x3b\x48\x58\x51\x51\x71\x6b\x57\x58\x0e"
     ),
   )
+}
+
+///|
+fn camlpdf_rijndaelEncrypt(
+  rk : ArrayView[UInt],
+  nr : Int,
+  pt : ArrayView[Byte],
+  ct : ArrayView[Byte],
+) -> Unit {
+  let mut offset = 0
+  let mut s0 : UInt = 0
+  let mut s1 : UInt = 0
+  let mut s2 : UInt = 0
+  let mut s3 : UInt = 0
+  let mut t0 : UInt = 0
+  let mut t1 : UInt = 0
+  let mut t2 : UInt = 0
+  let mut t3 : UInt = 0
+  /// map byte array block to cipher state and add initial round key
+
+  s0 = get_u32(pt, 0) ^ rk[offset + 0]
+  s1 = get_u32(pt, 4) ^ rk[offset + 1]
+  s2 = get_u32(pt, 8) ^ rk[offset + 2]
+  s3 = get_u32(pt, 12) ^ rk[offset + 3]
+
+  // nr -1 full rounds 
+  let mut r = nr >> 1
+  while true {
+    t0 = te0[idx(s0 >> 24)] ^
+      te1[idx((s1 >> 16) & 0xff)] ^
+      te2[idx((s2 >> 8) & 0xff)] ^
+      te3[idx(s3 & 0xff)] ^
+      rk[offset + 4]
+    t1 = te0[idx(s1 >> 24)] ^
+      te1[idx((s2 >> 16) & 0xff)] ^
+      te2[idx((s3 >> 8) & 0xff)] ^
+      te3[idx(s0 & 0xff)] ^
+      rk[offset + 5]
+    t2 = te0[idx(s2 >> 24)] ^
+      te1[idx((s3 >> 16) & 0xff)] ^
+      te2[idx((s0 >> 8) & 0xff)] ^
+      te3[idx(s1 & 0xff)] ^
+      rk[offset + 6]
+    t3 = te0[idx(s3 >> 24)] ^
+      te1[idx((s0 >> 16) & 0xff)] ^
+      te2[idx((s1 >> 8) & 0xff)] ^
+      te3[idx(s2 & 0xff)] ^
+      rk[offset + 7]
+    offset += 8
+    r -= 1
+    if r == 0 {
+      break
+    }
+    s0 = te0[idx(t0 >> 24)] ^
+      te1[idx((t1 >> 16) & 0xff)] ^
+      te2[idx((t2 >> 8) & 0xff)] ^
+      te3[idx(t3 & 0xff)] ^
+      rk[offset + 0]
+    s1 = te0[idx(t1 >> 24)] ^
+      te1[idx((t2 >> 16) & 0xff)] ^
+      te2[idx((t3 >> 8) & 0xff)] ^
+      te3[idx(t0 & 0xff)] ^
+      rk[offset + 1]
+    s2 = te0[idx(t2 >> 24)] ^
+      te1[idx((t3 >> 16) & 0xff)] ^
+      te2[idx((t0 >> 8) & 0xff)] ^
+      te3[idx(t1 & 0xff)] ^
+      rk[offset + 2]
+    s3 = te0[idx(t3 >> 24)] ^
+      te1[idx((t0 >> 16) & 0xff)] ^
+      te2[idx((t1 >> 8) & 0xff)] ^
+      te3[idx(t2 & 0xff)] ^
+      rk[offset + 3]
+  }
+  // apply last round and map cipher state to byte array block
+
+  s0 = (te4[idx(t0 >> 24)] & 0xff000000) ^
+    (te4[idx((t1 >> 16) & 0xff)] & 0x00ff0000) ^
+    (te4[idx((t2 >> 8) & 0xff)] & 0x0000ff00) ^
+    (te4[idx(t3 & 0xff)] & 0x000000ff) ^
+    rk[offset + 0]
+  set_u32(ct, 0, s0)
+  s1 = (te4[idx(t1 >> 24)] & 0xff000000) ^
+    (te4[idx((t2 >> 16) & 0xff)] & 0x00ff0000) ^
+    (te4[idx((t3 >> 8) & 0xff)] & 0x0000ff00) ^
+    (te4[idx(t0 & 0xff)] & 0x000000ff) ^
+    rk[offset + 1]
+  set_u32(ct, 4, s1)
+  s2 = (te4[idx(t2 >> 24)] & 0xff000000) ^
+    (te4[idx((t3 >> 16) & 0xff)] & 0x00ff0000) ^
+    (te4[idx((t0 >> 8) & 0xff)] & 0x0000ff00) ^
+    (te4[idx(t1 & 0xff)] & 0x000000ff) ^
+    rk[offset + 2]
+  set_u32(ct, 8, s2)
+  s3 = (te4[idx(t3 >> 24)] & 0xff000000) ^
+    (te4[idx((t0 >> 16) & 0xff)] & 0x00ff0000) ^
+    (te4[idx((t1 >> 8) & 0xff)] & 0x0000ff00) ^
+    (te4[idx(t2 & 0xff)] & 0x000000ff) ^
+    rk[offset + 3]
+  set_u32(ct, 12, s3)
+}
+
+///|
+fn unsafe_bytes_to_fixed_array_byte(x : Bytes) -> FixedArray[Byte] = "%identity"
+
+///|
+fn camlpdf_caml_aes_encrypt(
+  ckey : Bytes,
+  src : Bytes,
+  src_ofs : Int,
+  dst : Bytes,
+  dst_ofs : Int,
+) -> Unit {
+  let nr = ckey[Cooked_key_NR_offset].to_int()
+  let _ckey = Array::make(Cooked_length, 0U)
+  for i in 0..<_ckey.length() {
+    _ckey[i] = ckey[i * 4].to_uint() |
+      (ckey[i * 4 + 1].to_uint() << 8) |
+      (ckey[i * 4 + 2].to_uint() << 16) |
+      (ckey[i * 4 + 3].to_uint() << 24)
+  }
+  let _src = src.to_array()
+  let _dst = dst.to_array()
+  camlpdf_rijndaelEncrypt(_ckey, nr, _src[src_ofs:], _dst[dst_ofs:])
+  // unsafe write to immutable bytes 
+  let result = unsafe_bytes_to_fixed_array_byte(dst)
+  for i in 0..<_dst.length() {
+    result[dst_ofs + i] = _dst[i]
+  }
 }
