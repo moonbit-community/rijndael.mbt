@@ -1,60 +1,112 @@
 ///|
-/// if key.length == 16 || key.length == 24 || key.length == 32 then setup encryption 
-/// otherwise, return bytes which all byte are zero.
-/// 
-#borrow(key)
-extern "c" fn camlpdf_caml_aes_cook_encrypt_key(key : Bytes) -> Bytes = "camlpdf_caml_aes_cook_encrypt_key"
-
-///|
-/// if key.length == 16 || key.length == 24 || key.length == 32 then setup decryption
-/// otherwise, return bytes which all byte are zero.
-///
-#borrow(key)
-extern "c" fn camlpdf_caml_aes_cook_decrypt_key(key : Bytes) -> Bytes = "camlpdf_caml_aes_cook_decrypt_key"
-
-///|
-/// encrypt 16 bytes
-#borrow(ckey, src, src_ofs, dst, dst_ofs)
-extern "c" fn camlpdf_caml_aes_encrypt(
-  ckey : Bytes,
-  src : Bytes,
-  src_ofs : Int,
-  dst : Bytes,
-  dst_ofs : Int,
-) = "camlpdf_caml_aes_encrypt"
-
-///|
-/// decrypt 16 bytes
-#borrow(ckey, src, src_ofs, dst, dst_ofs)
-extern "c" fn camlpdf_caml_aes_decrypt(
-  ckey : Bytes,
-  src : Bytes,
-  src_ofs : Int,
-  dst : Bytes,
-  dst_ofs : Int,
-) = "camlpdf_caml_aes_decrypt"
-
-///|
-#callsite(autofill(loc))
-fn aes_test_driver(
-  cipher_key : Bytes,
-  plaintext : Bytes,
-  loc~ : SourceLoc,
-) -> Unit raise Error {
-  let encrypt_cooked = camlpdf_caml_aes_cook_encrypt_key(cipher_key)
-  let decrypt_cooked = camlpdf_caml_aes_cook_decrypt_key(cipher_key)
-  let ciphertext = Bytes::make(16, 0)
-  camlpdf_caml_aes_encrypt(encrypt_cooked, plaintext, 0, ciphertext, 0)
-  let decrypted = Bytes::make(16, 0)
-  camlpdf_caml_aes_decrypt(decrypt_cooked, ciphertext, 0, decrypted, 0)
-  assert_eq(plaintext, decrypted)
+fn camlpdf_rijndaelKeySetupEnc(
+  rk : ArrayView[UInt],
+  cipherKey : ArrayView[Byte],
+  keyBits : Int,
+) -> Int {
+  let mut i = 0
+  let mut offset = 0
+  let mut temp : UInt = 0
+  rk[offset + 0] = get_u32(cipherKey, 0)
+  rk[offset + 1] = get_u32(cipherKey, 4)
+  rk[offset + 2] = get_u32(cipherKey, 8)
+  rk[offset + 3] = get_u32(cipherKey, 12)
+  if keyBits == 128 {
+    while true {
+      temp = rk[offset + 3]
+      rk[offset + 4] = rk[offset + 0] ^
+        (te4[((temp >> 16) & 0xff).reinterpret_as_int()] & 0xff000000) ^
+        (te4[((temp >> 8) & 0xff).reinterpret_as_int()] & 0x00ff0000) ^
+        (te4[(temp & 0xff).reinterpret_as_int()] & 0x0000ff00) ^
+        (te4[(temp >> 24).reinterpret_as_int()] & 0x000000ff) ^
+        rcon[i]
+      rk[offset + 5] = rk[offset + 1] ^ rk[offset + 4]
+      rk[offset + 6] = rk[offset + 2] ^ rk[offset + 5]
+      rk[offset + 7] = rk[offset + 3] ^ rk[offset + 6]
+      i += 1
+      if i == 10 {
+        return 10
+      }
+      offset += 4
+    }
+  }
+  rk[offset + 4] = get_u32(cipherKey, 16)
+  rk[offset + 5] = get_u32(cipherKey, 20)
+  if keyBits == 192 {
+    while true {
+      temp = rk[offset + 5]
+      rk[offset + 6] = rk[offset + 0] ^
+        (te4[((temp >> 16) & 0xff).reinterpret_as_int()] & 0xff000000) ^
+        (te4[((temp >> 8) & 0xff).reinterpret_as_int()] & 0x00ff0000) ^
+        (te4[(temp & 0xff).reinterpret_as_int()] & 0x0000ff00) ^
+        (te4[(temp >> 24).reinterpret_as_int()] & 0x000000ff) ^
+        rcon[i]
+      rk[offset + 7] = rk[offset + 1] ^ rk[offset + 6]
+      rk[offset + 8] = rk[offset + 2] ^ rk[offset + 7]
+      rk[offset + 9] = rk[offset + 3] ^ rk[offset + 8]
+      i += 1
+      if i == 8 {
+        return 12
+      }
+      rk[offset + 10] = rk[offset + 4] ^ rk[offset + 9]
+      rk[offset + 11] = rk[offset + 5] ^ rk[offset + 10]
+      offset += 6
+    }
+  }
+  rk[offset + 6] = get_u32(cipherKey, 24)
+  rk[offset + 7] = get_u32(cipherKey, 28)
+  if keyBits == 256 {
+    while true {
+      temp = rk[offset + 7]
+      rk[offset + 8] = rk[offset + 0] ^
+        (te4[((temp >> 16) & 0xff).reinterpret_as_int()] & 0xff000000) ^
+        (te4[((temp >> 8) & 0xff).reinterpret_as_int()] & 0x00ff0000) ^
+        (te4[(temp & 0xff).reinterpret_as_int()] & 0x0000ff00) ^
+        (te4[(temp >> 24).reinterpret_as_int()] & 0x000000ff) ^
+        rcon[i]
+      rk[offset + 9] = rk[offset + 1] ^ rk[offset + 8]
+      rk[offset + 10] = rk[offset + 2] ^ rk[offset + 9]
+      rk[offset + 11] = rk[offset + 3] ^ rk[offset + 10]
+      i += 1
+      if i == 7 {
+        return 14
+      }
+      temp = rk[offset + 11]
+      rk[offset + 12] = rk[offset + 4] ^
+        (te4[(temp >> 24).reinterpret_as_int()] & 0xff000000) ^
+        (te4[((temp >> 16) & 0xff).reinterpret_as_int()] & 0x00ff0000) ^
+        (te4[((temp >> 8) & 0xff).reinterpret_as_int()] & 0x0000ff00) ^
+        (te4[(temp & 0xff).reinterpret_as_int()] & 0x000000ff) 
+      rk[offset + 13] = rk[offset + 5] ^ rk[offset + 12]
+      rk[offset + 14] = rk[offset + 6] ^ rk[offset + 13]
+      rk[offset + 15] = rk[offset + 7] ^ rk[offset + 14]
+      offset += 8
+    }
+  }
+  return 0
 }
 
 ///|
-test "AES test driver" {
-  let key : Bytes = "0123456789ABCDEF"
-  let plaintext : Bytes = "Time is precious"
-  aes_test_driver(key, plaintext)
+fn _camlpdf_caml_aes_cook_encrypt_key(
+  key : ArrayView[Byte],
+) -> (Array[UInt], Int) {
+  let ckey : Array[UInt] = Array::make(Cooked_length, 0)
+  let nr = camlpdf_rijndaelKeySetupEnc(ckey, key, 8 * key.length())
+  (ckey, nr)
+}
+
+///|
+fn transfer_fixedarray_byte_to_bytes(x : FixedArray[Byte]) -> Bytes = "%identity"
+
+///|
+fn camlpdf_caml_aes_cook_encrypt_key(key : Bytes) -> Bytes {
+  let (ekey, nr) = _camlpdf_caml_aes_cook_encrypt_key(key.to_array())
+  let buffer = @buffer.new(size_hint=Cooked_key_size)
+  for i in 0..<ekey.length() {
+    buffer.write_uint_le(ekey[i])
+  }
+  buffer.write_byte(nr.to_byte())
+  buffer.to_bytes()
 }
 
 ///|
@@ -67,62 +119,40 @@ test "basic test" {
       #|b"\x33\x32\x31\x30\x37\x36\x35\x34\x42\x41\x39\x38\x46\x45\x44\x43\x29\x68\x5f\x2a\x1e\x5e\x6a\x1e\x5c\x1f\x53\x26\x1a\x5a\x17\x65\x64\xca\xe1\xd8\x7a\x94\x8b\xc6\x26\x8b\xd8\xe0\x3c\xd1\xcf\x85\xf3\x21\xdf\x56\x89\xb5\x54\x90\xaf\x3e\x8c\x70\x93\xef\x43\xf5\x15\xfd\x00\x44\x9c\x48\x54\xd4\x33\x76\xd8\xa4\xa0\x99\x9b\x51\xc4\x1d\xee\x40\x58\x55\xba\x94\x6b\x23\x62\x30\xcb\xba\xf9\x61\x2b\x02\x1a\xf9\x73\x57\xa0\x6d\x18\x74\xc2\x5d\xd3\xce\x3b\x3c\xc0\x64\x91\x5b\xb3\x33\x31\x36\xab\x47\xf3\x6b\x78\x89\xc8\x57\x9b\xd8\x36\x33\x28\xeb\x07\x05\x83\xac\xf4\x6e\xfb\x25\x3c\x39\x89\xd7\x09\xc3\xa1\x3c\x0e\xc6\x22\x90\xfa\xa8\xd9\xb5\xc6\x91\x08\xe2\xdc\x41\xa9\xde\xd2\x87\x8b\x4e\x28\x2f\x52\xfb\xee\xbe\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0a"
     ),
   )
-  inspect(encrypt_cooked.length(), content="241")
-  let decrypt_cooked = camlpdf_caml_aes_cook_decrypt_key(key)
-  inspect(
-    decrypt_cooked,
-    content=(
-      #|b"\x08\xe2\xdc\x41\xa9\xde\xd2\x87\x8b\x4e\x28\x2f\x52\xfb\xee\xbe\x73\x63\xc0\x44\x2e\x13\x2b\x43\xc1\xae\xc2\x4d\xcd\x05\xa4\x57\x12\x9f\x33\xf8\x5d\x70\xeb\x07\xef\xbd\xe9\x0e\x0c\xab\x66\x1a\x81\xf8\x0c\x1b\x4f\xef\xd8\xff\xb2\xcd\x02\x09\xe3\x16\x8f\x14\x90\x51\x2e\x25\xce\x17\xd4\xe4\xfd\x22\xda\xf6\x51\xdb\x8d\x1d\x9d\x39\x59\x8a\x5e\x46\xfa\xc1\x33\x35\x0e\x12\xac\xf9\x57\xeb\x58\x5f\x0e\xa5\xc3\x7f\xa3\x4b\x6d\x73\xf4\xd3\x9f\xcc\x59\xf9\xa7\xec\x3d\x2d\x9b\x20\xad\xee\xae\x0c\x57\x98\xf2\xbf\xad\x2a\x66\x86\xd6\xa1\x3c\xcc\x90\xc3\x35\x2c\xfa\x76\x5c\xb3\xfa\xb2\x63\x76\x7d\x5c\x5a\x4a\x46\x62\x09\xe0\x6a\xb5\x69\x9f\x00\xc4\x33\x32\x31\x30\x37\x36\x35\x34\x42\x41\x39\x38\x46\x45\x44\x43\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0a"
-    ),
-  )
-  inspect(decrypt_cooked.length(), content="241")
-
-  // 16 bytes
-  let plaintext : Bytes = "Time is precious"
-  inspect(plaintext.length(), content="16")
-  inspect(
-    plaintext,
-    content=(
-      #|b"\x54\x69\x6d\x65\x20\x69\x73\x20\x70\x72\x65\x63\x69\x6f\x75\x73"
-    ),
-  )
-  let ciphertext = Bytes::make(16, 0)
-  camlpdf_caml_aes_encrypt(encrypt_cooked, plaintext, 0, ciphertext, 0)
-  inspect(
-    ciphertext,
-    content=(
-      #|b"\xf3\x97\x09\xdf\x2c\xdb\x87\x42\x40\x47\xba\x4e\x28\x66\x14\xb3"
-    ),
-  )
-  let decrypted = Bytes::make(16, 0)
-  camlpdf_caml_aes_decrypt(decrypt_cooked, ciphertext, 0, decrypted, 0)
-  inspect(
-    decrypted,
-    content=(
-      #|b"\x54\x69\x6d\x65\x20\x69\x73\x20\x70\x72\x65\x63\x69\x6f\x75\x73"
-    ),
-  )
-  assert_eq(plaintext, decrypted)
 }
 
 ///|
 test {
-  let rand = @random.Rand::chacha8()
-  fn fresh() {
-    Bytes::makei(16, i => rand.int().to_byte())
-  }
-
-  let plaintext = fresh()
-  aes_test_driver("0123456789ABCDEF", plaintext)
+  let key : Bytes = "0123456789ABCDEF"
+  let key = key.to_array()
+  let p1 = get_u32(key, 0)
+  let p2 = get_u32(key, 4)
+  let p3 = get_u32(key, 8)
+  let p4 = get_u32(key, 12)
   inspect(
-    plaintext,
+    p1.to_le_bytes(),
     content=(
-      #|b"\x03\x91\xec\x01\x70\x77\x38\xe0\xb0\xac\xa7\x3b\xac\x22\x53\x19"
+      #|b"\x33\x32\x31\x30"
     ),
   )
-  aes_test_driver("0123456789ABCDEF", fresh())
-  aes_test_driver("0123456789ABCDEF", fresh())
-  aes_test_driver("0123456789ABCDEF", fresh())
+  inspect(
+    p2.to_le_bytes(),
+    content=(
+      #|b"\x37\x36\x35\x34"
+    ),
+  )
+  inspect(
+    p3.to_le_bytes(),
+    content=(
+      #|b"\x42\x41\x39\x38"
+    ),
+  )
+  inspect(
+    p4.to_le_bytes(),
+    content=(
+      #|b"\x46\x45\x44\x43"
+    ),
+  )
 }
 
 ///|
@@ -143,6 +173,7 @@ test "camlpdf_caml_aes_cook_encrypt_key" {
       #|b"\x63\x46\x46\x63\x4b\x63\x32\x68\x51\x67\x2e\x37\x46\x24\x23\x57\x61\x44\x51\x59\x36\x52\x77\x3a\xe3\x43\x46\x97\xa8\x20\x74\xff\xf9\x47\x5a\xc8\xbf\x63\x79\x9f\xde\x27\x28\xc6\xe8\x75\x5f\xfc\x53\xd8\xdb\x5a\xfb\xf8\xaf\xa5\x02\xbf\xf5\x6d\xbd\xdc\x8c\xf2\x63\xfb\xa4\x34\x8b\x8e\xfb\xc8\xbb\xe5\xc2\x51\x40\x1d\x6d\xf4\x42\xa2\x98\x99\xff\x7e\x14\x6b\x9c\x85\xb0\x5f\x17\x0b\x4b\x97\x33\x15\xe9\xea\x73\x08\x84\x1e\x31\xaa\x1c\x87\xce\xd4\x08\xec\x52\x51\xb8\xb3\x45\x5a\xf3\x24\x05\x7b\x57\xf7\x76\x73\xd3\xe9\x47\xd9\xcf\x6e\x89\x0d\xc7\x82\xdb\x5c\x7f\x31\x9e\x06\x8c\x15\x5c\x70\x38\xb3\x2a\x03\xeb\x5a\x6d\xda\x24\x34\xe4\xd7\xe3\xb6\x3f\x8b\x9c\x87\xa1\x8d\x10\x92\x13\x42\x65\x39\x39\x41\x8e\x63\x54\x9b\xaa\x57\xb0\x4c\x49\xe1\x8f\xc7\xd5\x66\x2e\x4a\xc5\xf4\xac\x73\xb3\x1f\x95\x32\x3d\x7c\xc1\xa9\x97\x2b\x71\xe5\xde\xca\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0c"
     ),
   )
+  // found bug
   inspect(
     camlpdf_caml_aes_cook_encrypt_key(key_256),
     content=(
