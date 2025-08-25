@@ -122,6 +122,14 @@ test "basic test" {
     ),
   )
   inspect(encrypt_cooked.length(), content="241")
+  let decrypt_cooked = camlpdf_caml_aes_cook_decrypt_key(key)
+  inspect(
+    decrypt_cooked,
+    content=(
+      #|b"\x08\xe2\xdc\x41\xa9\xde\xd2\x87\x8b\x4e\x28\x2f\x52\xfb\xee\xbe\x73\x63\xc0\x44\x2e\x13\x2b\x43\xc1\xae\xc2\x4d\xcd\x05\xa4\x57\x12\x9f\x33\xf8\x5d\x70\xeb\x07\xef\xbd\xe9\x0e\x0c\xab\x66\x1a\x81\xf8\x0c\x1b\x4f\xef\xd8\xff\xb2\xcd\x02\x09\xe3\x16\x8f\x14\x90\x51\x2e\x25\xce\x17\xd4\xe4\xfd\x22\xda\xf6\x51\xdb\x8d\x1d\x9d\x39\x59\x8a\x5e\x46\xfa\xc1\x33\x35\x0e\x12\xac\xf9\x57\xeb\x58\x5f\x0e\xa5\xc3\x7f\xa3\x4b\x6d\x73\xf4\xd3\x9f\xcc\x59\xf9\xa7\xec\x3d\x2d\x9b\x20\xad\xee\xae\x0c\x57\x98\xf2\xbf\xad\x2a\x66\x86\xd6\xa1\x3c\xcc\x90\xc3\x35\x2c\xfa\x76\x5c\xb3\xfa\xb2\x63\x76\x7d\x5c\x5a\x4a\x46\x62\x09\xe0\x6a\xb5\x69\x9f\x00\xc4\x33\x32\x31\x30\x37\x36\x35\x34\x42\x41\x39\x38\x46\x45\x44\x43\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0a"
+    ),
+  )
+  inspect(decrypt_cooked.length(), content="241")
 
   // 16 bytes
   let plaintext : Bytes = "Time is precious"
@@ -140,6 +148,15 @@ test "basic test" {
       #|b"\xf3\x97\x09\xdf\x2c\xdb\x87\x42\x40\x47\xba\x4e\x28\x66\x14\xb3"
     ),
   )
+  let decrypted = Bytes::make(16, 0)
+  camlpdf_caml_aes_decrypt(decrypt_cooked, ciphertext, 0, decrypted, 0)
+  inspect(
+    decrypted,
+    content=(
+      #|b"\x54\x69\x6d\x65\x20\x69\x73\x20\x70\x72\x65\x63\x69\x6f\x75\x73"
+    ),
+  )
+  assert_eq(plaintext, decrypted)
 }
 
 ///|
@@ -460,8 +477,97 @@ fn camlpdf_caml_aes_decrypt(
 fn camlpdf_rijndaelDecrypt(
   rk : ArrayView[UInt],
   nr : Int,
-  pt : ArrayView[Byte],
   ct : ArrayView[Byte],
+  pt : ArrayView[Byte],
 ) -> Unit {
-  ...
+  let mut offset = 0
+  let mut s0 : UInt = 0
+  let mut s1 : UInt = 0
+  let mut s2 : UInt = 0
+  let mut s3 : UInt = 0
+  let mut t0 : UInt = 0
+  let mut t1 : UInt = 0
+  let mut t2 : UInt = 0
+  let mut t3 : UInt = 0
+
+  // map byte array block to cipher state
+  // and add initial round key
+  //
+
+  s0 = get_u32(ct, 0) ^ rk[offset + 0]
+  s1 = get_u32(ct, 4) ^ rk[offset + 1]
+  s2 = get_u32(ct, 8) ^ rk[offset + 2]
+  s3 = get_u32(ct, 12) ^ rk[offset + 3]
+  let mut r = nr >> 1
+  while true {
+    t0 = td0[idx(s0 >> 24)] ^
+      td1[idx(s3 >> 16) & 0xff] ^
+      td2[idx(s2 >> 8) & 0xff] ^
+      td3[idx(s1) & 0xff] ^
+      rk[offset + 4]
+    t1 = td0[idx(s1 >> 24)] ^
+      td1[idx(s0 >> 16) & 0xff] ^
+      td2[idx(s3 >> 8) & 0xff] ^
+      td3[idx(s2) & 0xff] ^
+      rk[offset + 5]
+    t2 = td0[idx(s2 >> 24)] ^
+      td1[idx(s1 >> 16) & 0xff] ^
+      td2[idx(s0 >> 8) & 0xff] ^
+      td3[idx(s3) & 0xff] ^
+      rk[offset + 6]
+    t3 = td0[idx(s3 >> 24)] ^
+      td1[idx(s2 >> 16) & 0xff] ^
+      td2[idx(s1 >> 8) & 0xff] ^
+      td3[idx(s0) & 0xff] ^
+      rk[offset + 7]
+    offset += 8
+    r -= 1
+    if r == 0 {
+      break
+    }
+    s0 = td0[idx(t0 >> 24)] ^
+      td1[idx(t3 >> 16) & 0xff] ^
+      td2[idx(t2 >> 8) & 0xff] ^
+      td3[idx(t1) & 0xff] ^
+      rk[offset + 0]
+    s1 = td0[idx(t1 >> 24)] ^
+      td1[idx(t0 >> 16) & 0xff] ^
+      td2[idx(t3 >> 8) & 0xff] ^
+      td3[idx(t2) & 0xff] ^
+      rk[offset + 1]
+    s2 = td0[idx(t2 >> 24)] ^
+      td1[idx(t1 >> 16) & 0xff] ^
+      td2[idx(t0 >> 8) & 0xff] ^
+      td3[idx(t3) & 0xff] ^
+      rk[offset + 2]
+    s3 = td0[idx(t3 >> 24)] ^
+      td1[idx(t2 >> 16) & 0xff] ^
+      td2[idx(t1 >> 8) & 0xff] ^
+      td3[idx(t0) & 0xff] ^
+      rk[offset + 3]
+  }
+  s0 = (td4[idx(t0 >> 24)] & 0xff000000) ^
+    (td4[idx((t3 >> 16) & 0xff)] & 0x00ff0000) ^
+    (td4[idx((t2 >> 8) & 0xff)] & 0x0000ff00) ^
+    (td4[idx(t1 & 0xff)] & 0x000000ff) ^
+    rk[offset + 0]
+  set_u32(pt, 0, s0)
+  s1 = (td4[idx(t1 >> 24)] & 0xff000000) ^
+    (td4[idx((t0 >> 16) & 0xff)] & 0x00ff0000) ^
+    (td4[idx((t3 >> 8) & 0xff)] & 0x0000ff00) ^
+    (td4[idx(t2 & 0xff)] & 0x000000ff) ^
+    rk[offset + 1]
+  set_u32(pt, 4, s1)
+  s2 = (td4[idx(t2 >> 24)] & 0xff000000) ^
+    (td4[idx((t1 >> 16) & 0xff)] & 0x00ff0000) ^
+    (td4[idx((t0 >> 8) & 0xff)] & 0x0000ff00) ^
+    (td4[idx(t3 & 0xff)] & 0x000000ff) ^
+    rk[offset + 2]
+  set_u32(pt, 8, s2)
+  s3 = (td4[idx(t3 >> 24)] & 0xff000000) ^
+    (td4[idx((t2 >> 16) & 0xff)] & 0x00ff0000) ^
+    (td4[idx((t1 >> 8) & 0xff)] & 0x0000ff00) ^
+    (td4[idx(t0 & 0xff)] & 0x000000ff) ^
+    rk[offset + 3]
+  set_u32(pt, 12, s3)
 }
