@@ -429,3 +429,39 @@ fn camlpdf_caml_aes_encrypt(
     result[dst_ofs + i] = _dst[i]
   }
 }
+
+///|
+fn camlpdf_caml_aes_decrypt(
+  ckey : Bytes,
+  src : Bytes,
+  src_ofs : Int,
+  dst : Bytes,
+  dst_ofs : Int,
+) -> Unit {
+  let nr = ckey[Cooked_key_NR_offset].to_int()
+  let _ckey = Array::make(Cooked_length, 0U)
+  for i in 0..<_ckey.length() {
+    _ckey[i] = ckey[i * 4].to_uint() |
+      (ckey[i * 4 + 1].to_uint() << 8) |
+      (ckey[i * 4 + 2].to_uint() << 16) |
+      (ckey[i * 4 + 3].to_uint() << 24)
+  }
+  let _src = src.to_array()
+  let _dst = dst.to_array()
+  camlpdf_rijndaelDecrypt(_ckey, nr, _src[src_ofs:], _dst[dst_ofs:])
+  // unsafe write to immutable bytes
+  let result = unsafe_bytes_to_fixed_array_byte(dst)
+  for i in 0..<_dst.length() {
+    result[dst_ofs + i] = _dst[i]
+  }
+}
+
+///|
+fn camlpdf_rijndaelDecrypt(
+  rk : ArrayView[UInt],
+  nr : Int,
+  pt : ArrayView[Byte],
+  ct : ArrayView[Byte],
+) -> Unit {
+  ...
+}
