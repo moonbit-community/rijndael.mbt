@@ -460,8 +460,61 @@ fn camlpdf_caml_aes_decrypt(
 fn camlpdf_rijndaelDecrypt(
   rk : ArrayView[UInt],
   nr : Int,
-  pt : ArrayView[Byte],
   ct : ArrayView[Byte],
+  pt : ArrayView[Byte],
 ) -> Unit {
+  let mut offset = 0
+  let mut s0 : UInt = 0
+  let mut s1 : UInt = 0
+  let mut s2 : UInt = 0
+  let mut s3 : UInt = 0
+  let mut t0 : UInt = 0
+  let mut t1 : UInt = 0
+  let mut t2 : UInt = 0
+  let mut t3 : UInt = 0
+
+  // map byte array block to cipher state
+  // and add initial round key
+  //
+
+  s0 = get_u32(ct,0) ^ rk[offset + 0]
+  s1 = get_u32(ct,4) ^ rk[offset + 1]
+  s2 = get_u32(ct,8) ^ rk[offset + 2]
+  s3 = get_u32(ct,12) ^ rk[offset + 3]
+
+  let mut r = nr >> 1 
+
+  while true {
+    t0 = td0[idx(s0 >> 24)] ^
+         td1[idx(s3 >> 16) & 0xff] ^
+         td2[idx(s2 >> 8) & 0xff] ^
+         td3[idx(s1) & 0xff] ^
+         rk[offset + 4]
+
+    t1 = td0[idx(s1 >> 24)] ^
+         td1[idx(s0 >> 16) & 0xff] ^
+         td2[idx(s3 >> 8) & 0xff] ^
+         td3[idx(s2) & 0xff] ^
+         rk[offset + 5]
+
+    t2 = td0[idx(s2 >> 24)] ^
+         td1[idx(s1 >> 16) & 0xff] ^
+         td2[idx(s0 >> 8) & 0xff] ^
+         td3[idx(s3) & 0xff] ^
+         rk[offset + 6]
+    
+    t3 = td0[idx(s3 >> 24)] ^
+         td1[idx(s2 >> 16) & 0xff] ^
+         td2[idx(s1 >> 8) & 0xff] ^
+         td3[idx(s0) & 0xff] ^
+         rk[offset + 7]
+
+    offset += 8
+    r -= 1
+
+    if r == 0 { break }
+    // TODO
+    // continue in `rijndael-alg-fst.c: L1157`
+  }
   ...
 }
