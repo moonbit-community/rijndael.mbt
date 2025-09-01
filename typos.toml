@@ -1,2 +1,2 @@
 [files]
-extend-exclude = ["src/native/rijndael-alg-fst.c", "src/rijndael/table.mbt"]
+extend-exclude = ["native/rijndael-alg-fst.c", "rijndael/table.mbt"]
