@@ -1,4 +1,4 @@
-///| 
+///|
 /// Te0[x] = S [x].[02, 01, 01, 03];
 /// Te1[x] = S [x].[03, 02, 01, 01];
 /// Te2[x] = S [x].[01, 03, 02, 01];
@@ -52,7 +52,8 @@ let te0 : FixedArray[UInt] = [
   0x7bb0b0cbU, 0xa85454fcU, 0x6dbbbbd6U, 0x2c16163aU,
 ]
 
-///| FixedArray[UInt,256]
+///|
+/// FixedArray[UInt,256]
 let te1 : FixedArray[UInt] = [
   0xa5c66363U, 0x84f87c7cU, 0x99ee7777U, 0x8df67b7bU, 0x0dfff2f2U, 0xbdd66b6bU, 0xb1de6f6fU,
   0x5491c5c5U, 0x50603030U, 0x03020101U, 0xa9ce6767U, 0x7d562b2bU, 0x19e7fefeU, 0x62b5d7d7U,
@@ -93,7 +94,8 @@ let te1 : FixedArray[UInt] = [
   0xcb7bb0b0U, 0xfca85454U, 0xd66dbbbbU, 0x3a2c1616U,
 ]
 
-///| FixedArray[UInt,256]
+///|
+/// FixedArray[UInt,256]
 let te2 : FixedArray[UInt] = [
   0x63a5c663U, 0x7c84f87cU, 0x7799ee77U, 0x7b8df67bU, 0xf20dfff2U, 0x6bbdd66bU, 0x6fb1de6fU,
   0xc55491c5U, 0x30506030U, 0x01030201U, 0x67a9ce67U, 0x2b7d562bU, 0xfe19e7feU, 0xd762b5d7U,
@@ -134,7 +136,8 @@ let te2 : FixedArray[UInt] = [
   0xb0cb7bb0U, 0x54fca854U, 0xbbd66dbbU, 0x163a2c16U,
 ]
 
-///| FixedArray[UInt,256]
+///|
+/// FixedArray[UInt,256]
 let te3 : FixedArray[UInt] = [
   0x6363a5c6U, 0x7c7c84f8U, 0x777799eeU, 0x7b7b8df6U, 0xf2f20dffU, 0x6b6bbdd6U, 0x6f6fb1deU,
   0xc5c55491U, 0x30305060U, 0x01010302U, 0x6767a9ceU, 0x2b2b7d56U, 0xfefe19e7U, 0xd7d762b5U,
@@ -257,7 +260,8 @@ let td0 : FixedArray[UInt] = [
   0x7bcb8461U, 0xd532b670U, 0x486c5c74U, 0xd0b85742U,
 ]
 
-///| FixedArray[UInt,256]
+///|
+/// FixedArray[UInt,256]
 let td1 : FixedArray[UInt] = [
   0x5051f4a7U, 0x537e4165U, 0xc31a17a4U, 0x963a275eU, 0xcb3bab6bU, 0xf11f9d45U, 0xabacfa58U,
   0x934be303U, 0x552030faU, 0xf6ad766dU, 0x9188cc76U, 0x25f5024cU, 0xfc4fe5d7U, 0xd7c52acbU,
@@ -421,7 +425,8 @@ let td4 : FixedArray[UInt] = [
   0x55555555U, 0x21212121U, 0x0c0c0c0cU, 0x7d7d7d7dU,
 ]
 
-///| for 128-bit blocks, Rijndael never uses more than 10 rcon values 
+///|
+/// for 128-bit blocks, Rijndael never uses more than 10 rcon values 
 let rcon : FixedArray[UInt] = [
   0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000,
   0x80000000, 0x1B000000, 0x36000000,
