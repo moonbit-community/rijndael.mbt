@@ -8,6 +8,6 @@ file(TO_CMAKE_PATH $ENV{MOON_BIN} MOON_BIN)
 include_directories(${MOON_BIN}/../include)
 
 add_library(rijndael STATIC
-    src/native/rijndael-alg-fst.c
-    src/native/stub.c
+    native/rijndael-alg-fst.c
+    native/stub.c
 )
