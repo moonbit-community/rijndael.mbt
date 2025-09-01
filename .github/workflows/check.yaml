@@ -79,9 +79,19 @@ jobs:
           ulimit -s 8176
 
       - name: moon test
+        if: ${{ matrix.os.name != 'ubuntu-latest' }}
         run: |
-          moon test --target all,native
-          moon test --target all,native --release
+          moon test --target native
+          moon test --target native --release
+
+      - name: moon test on ubuntu
+        if: ${{ matrix.os.name == 'ubuntu-latest' }}
+        run: |
+          moon test --target native
+          moon test --target native --release
+        env:
+          MOON_CC: gcc
+          # disable mimalloc
 
   moon-json-format-check:
     runs-on: ubuntu-latest
