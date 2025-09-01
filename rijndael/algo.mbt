@@ -160,6 +160,29 @@ test "basic test" {
 }
 
 ///|
+#callsite(autofill(loc))
+fn aes_test_driver(
+  cipher_key : Bytes,
+  plaintext : Bytes,
+  loc~ : SourceLoc,
+) -> Unit raise Error {
+  let encrypt_cooked = camlpdf_caml_aes_cook_encrypt_key(cipher_key)
+  let decrypt_cooked = camlpdf_caml_aes_cook_decrypt_key(cipher_key)
+  let ciphertext = Bytes::make(16, 0)
+  camlpdf_caml_aes_encrypt(encrypt_cooked, plaintext, 0, ciphertext, 0)
+  let decrypted = Bytes::make(16, 0)
+  camlpdf_caml_aes_decrypt(decrypt_cooked, ciphertext, 0, decrypted, 0)
+  assert_eq(plaintext, decrypted)
+}
+
+///|
+test "AES test driver" {
+  let key : Bytes = "0123456789ABCDEF"
+  let plaintext : Bytes = "Time is precious"
+  aes_test_driver(key, plaintext)
+}
+
+///|
 test {
   let key : Bytes = "0123456789ABCDEF"
   let key = key.to_array()
