@@ -61,7 +61,8 @@ jobs:
 
       - name: moon info
         run: |
-          moon info --target wasm,wasm-gc,js,native
+          moon info --package native --target native 
+          moon info --package rijndael/rijndael --target wasm,wasm-gc,js,native
           git diff --exit-code
 
       - name: format diff

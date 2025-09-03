@@ -2,6 +2,13 @@
 package "illusory0x0/rijndael/rijndael"
 
 // Values
+fn camlpdf_caml_aes_cook_decrypt_key(FixedArray[Byte], Int, Int) -> FixedArray[Byte]
+
+fn camlpdf_caml_aes_cook_encrypt_key(FixedArray[Byte], Int, Int) -> FixedArray[Byte]
+
+fn camlpdf_caml_aes_decrypt(FixedArray[Byte], Int, FixedArray[Byte], Int, FixedArray[Byte], Int) -> Unit
+
+fn camlpdf_caml_aes_encrypt(FixedArray[Byte], Int, FixedArray[Byte], Int, FixedArray[Byte], Int) -> Unit
 
 // Errors
 
