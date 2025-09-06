@@ -83,17 +83,8 @@ pub fn camlpdf_caml_aes_encrypt(
   // Extract the number of rounds from the cooked key
   let nr = ckey[Cooked_key_NR_offset].to_int()
 
-  // Reconstruct the round keys from the cooked key (little-endian format)
-  let rk = FixedArray::make(Cooked_length, 0U)
-  for i = 0; i < Cooked_length; i = i + 1 {
-    let offset = i * Size_of_u32
-    let byte0 = ckey[offset].to_uint()
-    let byte1 = ckey[offset + 1].to_uint()
-    let byte2 = ckey[offset + 2].to_uint()
-    let byte3 = ckey[offset + 3].to_uint()
-    // Reconstruct from little-endian format
-    rk[i] = byte0 | (byte1 << 8) | (byte2 << 16) | (byte3 << 24)
-  }
+  // Reconstruct the round keys from the cooked key using the helper function
+  let rk = fixedarray_uint_of_fixedarray_byte(ckey)
 
   // Perform the encryption
   camlpdf_rijndaelEncrypt(rk, ckey_ofs, nr, src, src_ofs, dst, dst_ofs)
@@ -112,17 +103,8 @@ pub fn camlpdf_caml_aes_decrypt(
   // Extract the number of rounds from the cooked key
   let nr = ckey[Cooked_key_NR_offset].to_int()
 
-  // Reconstruct the round keys from the cooked key (little-endian format)
-  let rk = FixedArray::make(Cooked_length, 0U)
-  for i = 0; i < Cooked_length; i = i + 1 {
-    let offset = i * Size_of_u32
-    let byte0 = ckey[offset].to_uint()
-    let byte1 = ckey[offset + 1].to_uint()
-    let byte2 = ckey[offset + 2].to_uint()
-    let byte3 = ckey[offset + 3].to_uint()
-    // Reconstruct from little-endian format
-    rk[i] = byte0 | (byte1 << 8) | (byte2 << 16) | (byte3 << 24)
-  }
+  // Reconstruct the round keys from the cooked key using the helper function
+  let rk = fixedarray_uint_of_fixedarray_byte(ckey)
 
   // Perform the decryption
   camlpdf_rijndaelDecrypt(rk, ckey_ofs, nr, src, src_ofs, dst, dst_ofs)
@@ -134,9 +116,16 @@ pub fn camlpdf_caml_aes_decrypt(
 fn fixedarray_uint_of_fixedarray_byte(
   input : FixedArray[Byte],
 ) -> FixedArray[UInt] {
-  let result = FixedArray::make(input.length(), 0U)
-  for i = 0; i < input.length(); i = i + 1 {
-    result[i] = input[i].to_uint()
+  let len = input.length() / Size_of_u32
+  let result = FixedArray::make(len, 0U)
+  for i = 0; i < len; i = i + 1 {
+    let offset = i * Size_of_u32
+    let byte0 = input[offset].to_uint()
+    let byte1 = input[offset + 1].to_uint()
+    let byte2 = input[offset + 2].to_uint()
+    let byte3 = input[offset + 3].to_uint()
+    // Reconstruct from little-endian format
+    result[i] = byte0 | (byte1 << 8) | (byte2 << 16) | (byte3 << 24)
   }
   result
 }
