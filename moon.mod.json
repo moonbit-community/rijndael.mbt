@@ -2,9 +2,9 @@
   "name": "illusory0x0/rijndael",
   "version": "0.1.0",
   "readme": "README.md",
-  "repository": "",
+  "repository": "https://github.com/moonbit-community/rijndael.mbt",
   "license": "Apache-2.0",
-  "keywords": [],
-  "description": "",
+  "keywords": ["cryptography", "encryption", "aes", "rijndael", "cipher", "security"],
+  "description": "A MoonBit implementation of the Rijndael (AES) encryption algorithm",
   "preferred-target": "native"
 }
