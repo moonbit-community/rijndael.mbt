@@ -127,3 +127,16 @@ pub fn camlpdf_caml_aes_decrypt(
   // Perform the decryption
   camlpdf_rijndaelDecrypt(rk, ckey_ofs, nr, src, src_ofs, dst, dst_ofs)
 }
+
+///|
+/// 
+/// https://github.com/WebAssembly/design/issues/1569
+fn fixedarray_uint_of_fixedarray_byte(
+  input : FixedArray[Byte],
+) -> FixedArray[UInt] {
+  let result = FixedArray::make(input.length(), 0U)
+  for i = 0; i < input.length(); i = i + 1 {
+    result[i] = input[i].to_uint()
+  }
+  result
+}
