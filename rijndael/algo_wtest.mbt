@@ -79,7 +79,7 @@ fn aes_test_driver(
   camlpdf_caml_aes_encrypt(encrypt_cooked, 0, plaintext_fa, 0, ciphertext, 0)
   let decrypted = FixedArray::make(16, b'\x00')
   camlpdf_caml_aes_decrypt(decrypt_cooked, 0, ciphertext, 0, decrypted, 0)
-  assert_eq(plaintext_fa, decrypted)
+  assert_eq(plaintext_fa, decrypted, loc~)
 }
 
 ///|

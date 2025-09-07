@@ -7,10 +7,6 @@ fn fixedarray_byte_of_bytes(x : Bytes) -> FixedArray[Byte] = "%identity"
 fn bytes_of_fixedarray_byte(x : FixedArray[Byte]) -> Bytes = "%identity"
 
 ///|
-/// Helper function to convert ArrayView[Byte] to FixedArray[Byte]
-fn fixedarray_of_arrayview_byte(x : ArrayView[Byte]) -> FixedArray[Byte] = "%identity"
-
-///|
 fn memory_of_fixedarray_byte(x : FixedArray[Byte]) -> @memory.Memory = "%identity"
 
 ///|
@@ -59,10 +55,6 @@ pub fn camlpdf_caml_aes_cook_decrypt_key(
   rk[Cooked_key_NR_offset] = nr.to_byte()
   fixedarray_byte_of_memory(rk)
 }
-
-///|
-/// Helper to convert Bytes to mutable FixedArray for unsafe operations
-fn unsafe_bytes_to_fixed_array_byte(x : Bytes) -> FixedArray[Byte] = "%identity"
 
 ///|
 /// AES encryption using cooked key and bytes interface
