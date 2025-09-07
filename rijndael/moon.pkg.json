@@ -1,5 +1,6 @@
 {
   "warn-list": "-1-2-3-5-6-7-8-10-29",
+  "import": ["illusory0x0/memory"],
   "link": {
     "native": {
       "cc-flags": "-fsanitize=address -fsanitize=undefined",

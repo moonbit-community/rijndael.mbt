@@ -11,6 +11,12 @@ fn bytes_of_fixedarray_byte(x : FixedArray[Byte]) -> Bytes = "%identity"
 fn fixedarray_of_arrayview_byte(x : ArrayView[Byte]) -> FixedArray[Byte] = "%identity"
 
 ///|
+fn memory_of_fixedarray_byte(x : FixedArray[Byte]) -> @memory.Memory = "%identity"
+
+///|
+fn fixedarray_byte_of_memory(x : @memory.Memory) -> FixedArray[Byte] = "%identity"
+
+///|
 /// Cook an AES encryption key from bytes
 pub fn camlpdf_caml_aes_cook_encrypt_key(
   key : FixedArray[Byte],
@@ -18,24 +24,17 @@ pub fn camlpdf_caml_aes_cook_encrypt_key(
   end : Int,
 ) -> FixedArray[Byte] {
   let key_bits = (end - start) * 8
-  let cooked_key = FixedArray::make(Cooked_key_size, b'\x00')
-  let rk = FixedArray::make(Cooked_length, 0U)
-  let nr = camlpdf_rijndaelKeySetupEnc(rk, 0, key, start, key_bits)
-
-  // Copy the round keys directly to the cooked key buffer in little-endian format
-  // This matches the C implementation which casts the buffer to u32*
-  for i = 0; i < Cooked_length; i = i + 1 {
-    let bytes = rk[i].to_le_bytes()
-    let offset = i * Size_of_u32
-    cooked_key[offset] = bytes[0]
-    cooked_key[offset + 1] = bytes[1]
-    cooked_key[offset + 2] = bytes[2]
-    cooked_key[offset + 3] = bytes[3]
-  }
-
-  // Store the number of rounds at the designated offset
-  cooked_key[Cooked_key_NR_offset] = nr.to_byte()
-  cooked_key
+  // let cooked_key = FixedArray::make(Cooked_key_size, b'\x00')
+  let rk = @memory.Memory::make(Cooked_key_size, 0)
+  let nr = camlpdf_rijndaelKeySetupEnc(
+    @memory.View::from_memory(rk),
+    0,
+    memory_of_fixedarray_byte(key),
+    start,
+    key_bits,
+  )
+  rk[Cooked_key_NR_offset] = nr.to_byte()
+  fixedarray_byte_of_memory(rk)
 }
 
 ///|
@@ -46,24 +45,19 @@ pub fn camlpdf_caml_aes_cook_decrypt_key(
   end : Int,
 ) -> FixedArray[Byte] {
   let key_bits = (end - start) * 8
-  let cooked_key = FixedArray::make(Cooked_key_size, b'\x00')
-  let rk = FixedArray::make(Cooked_length, 0U)
-  let nr = camlpdf_rijndaelKeySetupDec(rk, 0, key, start, key_bits)
-
-  // Copy the round keys directly to the cooked key buffer in little-endian format
-  // This matches the C implementation which casts the buffer to u32*
-  for i = 0; i < Cooked_length; i = i + 1 {
-    let bytes = rk[i].to_le_bytes()
-    let offset = i * Size_of_u32
-    cooked_key[offset] = bytes[0]
-    cooked_key[offset + 1] = bytes[1]
-    cooked_key[offset + 2] = bytes[2]
-    cooked_key[offset + 3] = bytes[3]
-  }
+  // let cooked_key = FixedArray::make(Cooked_key_size, b'\x00')
+  let rk = @memory.Memory::make(Cooked_key_size, 0)
+  let nr = camlpdf_rijndaelKeySetupDec(
+    @memory.View::from_memory(rk),
+    0,
+    memory_of_fixedarray_byte(key),
+    start,
+    key_bits,
+  )
 
   // Store the number of rounds at the designated offset
-  cooked_key[Cooked_key_NR_offset] = nr.to_byte()
-  cooked_key
+  rk[Cooked_key_NR_offset] = nr.to_byte()
+  fixedarray_byte_of_memory(rk)
 }
 
 ///|
@@ -82,12 +76,23 @@ pub fn camlpdf_caml_aes_encrypt(
 ) -> Unit {
   // Extract the number of rounds from the cooked key
   let nr = ckey[Cooked_key_NR_offset].to_int()
+  let rk = memory_of_fixedarray_byte(ckey)
+  let src = memory_of_fixedarray_byte(src)
+  let dst = memory_of_fixedarray_byte(dst)
 
   // Reconstruct the round keys from the cooked key using the helper function
-  let rk = fixedarray_uint_of_fixedarray_byte(ckey)
+  // let rk = fixedarray_uint_of_fixedarray_byte(ckey)
 
   // Perform the encryption
-  camlpdf_rijndaelEncrypt(rk, ckey_ofs, nr, src, src_ofs, dst, dst_ofs)
+  camlpdf_rijndaelEncrypt(
+    @memory.View::from_memory(rk),
+    ckey_ofs,
+    nr,
+    src,
+    src_ofs,
+    dst,
+    dst_ofs,
+  )
 }
 
 ///|
@@ -104,28 +109,17 @@ pub fn camlpdf_caml_aes_decrypt(
   let nr = ckey[Cooked_key_NR_offset].to_int()
 
   // Reconstruct the round keys from the cooked key using the helper function
-  let rk = fixedarray_uint_of_fixedarray_byte(ckey)
-
+  let rk = memory_of_fixedarray_byte(ckey)
+  let src = memory_of_fixedarray_byte(src)
+  let dst = memory_of_fixedarray_byte(dst)
   // Perform the decryption
-  camlpdf_rijndaelDecrypt(rk, ckey_ofs, nr, src, src_ofs, dst, dst_ofs)
-}
-
-///|
-/// 
-/// https://github.com/WebAssembly/design/issues/1569
-fn fixedarray_uint_of_fixedarray_byte(
-  input : FixedArray[Byte],
-) -> FixedArray[UInt] {
-  let len = input.length() / Size_of_u32
-  let result = FixedArray::make(len, 0U)
-  for i = 0; i < len; i = i + 1 {
-    let offset = i * Size_of_u32
-    let byte0 = input[offset].to_uint()
-    let byte1 = input[offset + 1].to_uint()
-    let byte2 = input[offset + 2].to_uint()
-    let byte3 = input[offset + 3].to_uint()
-    // Reconstruct from little-endian format
-    result[i] = byte0 | (byte1 << 8) | (byte2 << 16) | (byte3 << 24)
-  }
-  result
+  camlpdf_rijndaelDecrypt(
+    @memory.View::from_memory(rk),
+    ckey_ofs,
+    nr,
+    src,
+    src_ofs,
+    dst,
+    dst_ofs,
+  )
 }

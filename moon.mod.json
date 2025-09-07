@@ -1,6 +1,9 @@
 {
   "name": "illusory0x0/rijndael",
   "version": "0.1.0",
+  "deps": {
+    "illusory0x0/memory": "0.1.1"
+  },
   "readme": "README.md",
   "repository": "https://github.com/moonbit-community/rijndael.mbt",
   "license": "Apache-2.0",

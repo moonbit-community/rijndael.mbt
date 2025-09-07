@@ -5,9 +5,9 @@
 /// @return	the number of rounds for the given cipher key size.
 /// 
 fn camlpdf_rijndaelKeySetupEnc(
-  rk : FixedArray[UInt],
+  rk : @memory.View[UInt],
   rk_ofs : Int,
-  cipherKey : FixedArray[Byte],
+  cipherKey : @memory.Memory,
   cipherKey_ofs : Int,
   keyBits : Int,
 ) -> Int {
@@ -103,9 +103,9 @@ fnalias UInt::reinterpret_as_int as idx
 /// @return	the number of rounds for the given cipher key size.
 /// 
 fn camlpdf_rijndaelKeySetupDec(
-  rk : FixedArray[UInt],
+  rk : @memory.View[UInt],
   rk_ofs : Int,
-  cipherKey : FixedArray[Byte],
+  cipherKey : @memory.Memory,
   cipherKey_ofs : Int,
   keyBits : Int,
 ) -> Int {
@@ -118,10 +118,18 @@ fn camlpdf_rijndaelKeySetupDec(
   // equivalent to `rk.rev_inplace()`
   for i = 0, j = 4 * nr; i < j; i = i + 4, j = j - 4 {
     // unroll loop
-    rk.swap(i, j)
-    rk.swap(i + 1, j + 1)
-    rk.swap(i + 2, j + 2)
-    rk.swap(i + 3, j + 3)
+    let temp = rk[i]
+    rk[i] = rk[j]
+    rk[j] = temp
+    let temp = rk[i + 1]
+    rk[i + 1] = rk[j + 1]
+    rk[j + 1] = temp
+    let temp = rk[i + 2]
+    rk[i + 2] = rk[j + 2]
+    rk[j + 2] = temp
+    let temp = rk[i + 3]
+    rk[i + 3] = rk[j + 3]
+    rk[j + 3] = temp
   }
   // apply the inverse MixColumn transform to all round keys but the first and the last
 
@@ -151,12 +159,12 @@ fn camlpdf_rijndaelKeySetupDec(
 
 ///|
 fn camlpdf_rijndaelEncrypt(
-  rk : FixedArray[UInt],
+  rk : @memory.View[UInt],
   rk_ofs : Int,
   nr : Int,
-  pt : FixedArray[Byte],
+  pt : @memory.Memory,
   pt_ofs : Int,
-  ct : FixedArray[Byte],
+  ct : @memory.Memory,
   ct_ofs : Int,
 ) -> Unit {
   let mut offset = rk_ofs
@@ -254,12 +262,12 @@ fn camlpdf_rijndaelEncrypt(
 
 ///|
 fn camlpdf_rijndaelDecrypt(
-  rk : FixedArray[UInt],
+  rk : @memory.View[UInt],
   rk_ofs : Int,
   nr : Int,
-  ct : FixedArray[Byte],
+  ct : @memory.Memory,
   ct_ofs : Int,
-  pt : FixedArray[Byte],
+  pt : @memory.Memory,
   pt_ofs : Int,
 ) -> Unit {
   let mut offset = rk_ofs
