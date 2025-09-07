@@ -144,17 +144,41 @@ test "offset parameter usage" {
   let decrypted_array = FixedArray::make(16, b'\x00')
 
   // Setup keys with offset 0
-  let ekey = FixedArray::make(Cooked_length, 0U)
-  let dkey = FixedArray::make(Cooked_length, 0U)
-  let nr_enc = camlpdf_rijndaelKeySetupEnc(ekey, 0, key_array, 0, 128)
-  let nr_dec = camlpdf_rijndaelKeySetupDec(dkey, 0, key_array, 0, 128)
+  let ekey = @memory.Memory::make(Cooked_key_size, 0)
+  let dkey = @memory.Memory::make(Cooked_key_size, 0)
+  let nr_enc = camlpdf_rijndaelKeySetupEnc(
+    @memory.View::from_memory(ekey),
+    0,
+    memory_of_fixedarray_byte(key_array),
+    0,
+    128,
+  )
+  let nr_dec = camlpdf_rijndaelKeySetupDec(
+    @memory.View::from_memory(dkey),
+    0,
+    memory_of_fixedarray_byte(key_array),
+    0,
+    128,
+  )
 
   // Encrypt and decrypt using offset-based API
   camlpdf_rijndaelEncrypt(
-    ekey, 0, nr_enc, plaintext_array, 0, ciphertext_array, 0,
+    @memory.View::from_memory(ekey),
+    0,
+    nr_enc,
+    memory_of_fixedarray_byte(plaintext_array),
+    0,
+    memory_of_fixedarray_byte(ciphertext_array),
+    0,
   )
   camlpdf_rijndaelDecrypt(
-    dkey, 0, nr_dec, ciphertext_array, 0, decrypted_array, 0,
+    @memory.View::from_memory(dkey),
+    0,
+    nr_dec,
+    memory_of_fixedarray_byte(ciphertext_array),
+    0,
+    memory_of_fixedarray_byte(decrypted_array),
+    0,
   )
 
   // Verify results

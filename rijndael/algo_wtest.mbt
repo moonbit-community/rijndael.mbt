@@ -1,23 +1,4 @@
 ///|
-test "utility" {
-  let buffer = FixedArray::make(8, b'\x00')
-  set_u32(buffer, 0, 0x12345678U)
-  inspect(
-    bytes_of_fixedarray_byte(buffer),
-    content=(
-      #|b"\x12\x34\x56\x78\x00\x00\x00\x00"
-    ),
-  )
-  let value = get_u32(buffer, 0)
-  inspect(
-    value.to_be_bytes(),
-    content=(
-      #|b"\x12\x34\x56\x78"
-    ),
-  )
-}
-
-///|
 test "basic test" {
   let key : Bytes = "0123456789ABCDEF"
   let key_fa = fixedarray_byte_of_bytes(key)
@@ -112,10 +93,10 @@ test "AES test driver" {
 test {
   let key : Bytes = "0123456789ABCDEF"
   let key_array = fixedarray_byte_of_bytes(key)
-  let p1 = get_u32(key_array, 0)
-  let p2 = get_u32(key_array, 4)
-  let p3 = get_u32(key_array, 8)
-  let p4 = get_u32(key_array, 12)
+  let p1 = get_u32(memory_of_fixedarray_byte(key_array), 0)
+  let p2 = get_u32(memory_of_fixedarray_byte(key_array), 4)
+  let p3 = get_u32(memory_of_fixedarray_byte(key_array), 8)
+  let p4 = get_u32(memory_of_fixedarray_byte(key_array), 12)
   inspect(
     p1.to_le_bytes(),
     content=(

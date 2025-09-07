@@ -1,6 +1,6 @@
 ///|
 /// big-endian
-fn get_u32(xs : FixedArray[Byte], ofs : Int) -> UInt {
+fn get_u32(xs : @memory.Memory, ofs : Int) -> UInt {
   let b0 = xs[ofs + 0].to_uint()
   let b1 = xs[ofs + 1].to_uint()
   let b2 = xs[ofs + 2].to_uint()
@@ -10,7 +10,7 @@ fn get_u32(xs : FixedArray[Byte], ofs : Int) -> UInt {
 
 ///|
 /// big-endian
-fn set_u32(xs : FixedArray[Byte], ofs : Int, value : UInt) -> Unit {
+fn set_u32(xs : @memory.Memory, ofs : Int, value : UInt) -> Unit {
   let b0 = (value >> 24).to_byte()
   let b1 = (value >> 16).to_byte()
   let b2 = (value >> 8).to_byte()
