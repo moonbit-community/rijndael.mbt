@@ -41,3 +41,9 @@ const Cooked_key_NR_offset : Int = Cooked_length * Size_of_u32
 
 ///|
 const Cooked_key_size : Int = Cooked_key_NR_offset + 1
+
+///|
+fn init {
+  ignore(MAXKB)
+  ignore(MAXKC)
+}
