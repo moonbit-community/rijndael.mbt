@@ -94,7 +94,9 @@ fn camlpdf_rijndaelKeySetupEnc(
 }
 
 ///|
-fnalias UInt::reinterpret_as_int as idx
+fn idx(x : UInt) -> Int {
+  x.reinterpret_as_int()
+}
 
 ///|
 /// 
