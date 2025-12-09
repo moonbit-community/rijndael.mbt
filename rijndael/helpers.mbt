@@ -26,7 +26,7 @@ pub fn camlpdf_caml_aes_cook_encrypt_key(
   // let cooked_key = FixedArray::make(Cooked_key_size, b'\x00')
   let rk = @memory.Memory::make(Cooked_key_size, 0)
   let nr = camlpdf_rijndaelKeySetupEnc(
-    @memory.View::from_memory(rk),
+    view_uint_of_memory(rk),
     0,
     memory_of_fixedarray_byte(key),
     start,
@@ -47,7 +47,7 @@ pub fn camlpdf_caml_aes_cook_decrypt_key(
   // let cooked_key = FixedArray::make(Cooked_key_size, b'\x00')
   let rk = @memory.Memory::make(Cooked_key_size, 0)
   let nr = camlpdf_rijndaelKeySetupDec(
-    @memory.View::from_memory(rk),
+    view_uint_of_memory(rk),
     0,
     memory_of_fixedarray_byte(key),
     start,
@@ -80,7 +80,7 @@ pub fn camlpdf_caml_aes_encrypt(
 
   // Perform the encryption
   camlpdf_rijndaelEncrypt(
-    @memory.View::from_memory(rk),
+    view_uint_of_memory(rk),
     ckey_ofs,
     nr,
     src,
@@ -109,7 +109,7 @@ pub fn camlpdf_caml_aes_decrypt(
   let dst = memory_of_fixedarray_byte(dst)
   // Perform the decryption
   camlpdf_rijndaelDecrypt(
-    @memory.View::from_memory(rk),
+    view_uint_of_memory(rk),
     ckey_ofs,
     nr,
     src,
