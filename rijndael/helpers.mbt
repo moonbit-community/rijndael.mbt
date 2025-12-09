@@ -13,6 +13,9 @@ fn memory_of_fixedarray_byte(x : FixedArray[Byte]) -> @memory.Memory = "%identit
 fn fixedarray_byte_of_memory(x : @memory.Memory) -> FixedArray[Byte] = "%identity"
 
 ///|
+fn view_uint_of_memory(x : @memory.Memory) -> @memory.View[UInt] = "%identity"
+
+///|
 /// Cook an AES encryption key from bytes
 pub fn camlpdf_caml_aes_cook_encrypt_key(
   key : FixedArray[Byte],
