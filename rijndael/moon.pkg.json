@@ -2,8 +2,8 @@
   "import": ["illusory0x0/memory"],
   "link": {
     "native": {
-      "cc-flags": "-fsanitize=address -fsanitize=undefined",
-      "stub-cc-flags": "-fsanitize=address -fsanitize=undefined"
+      "cc-flags": "-fsanitize=address -fsanitize=undefined -Wno-incompatible-pointer-types",
+      "stub-cc-flags": "-fsanitize=address -fsanitize=undefined -Wno-incompatible-pointer-types"
     }
   }
 }

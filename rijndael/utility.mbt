@@ -43,6 +43,16 @@ const Cooked_key_NR_offset : Int = Cooked_length * Size_of_u32
 const Cooked_key_size : Int = Cooked_key_NR_offset + 1
 
 ///|
+/// Convert UInt to little-endian bytes
+fn to_le_bytes(value : UInt) -> Bytes {
+  let b0 = value.to_byte()
+  let b1 = (value >> 8).to_byte()
+  let b2 = (value >> 16).to_byte()
+  let b3 = (value >> 24).to_byte()
+  Bytes::from_array([b0, b1, b2, b3])
+}
+
+///|
 fn init {
   ignore(MAXKB)
   ignore(MAXKC)

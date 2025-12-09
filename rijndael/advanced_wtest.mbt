@@ -24,7 +24,7 @@ test "compatibility with random data" {
   inspect(
     bytes_of_fixedarray_byte(random_plaintext),
     content=(
-      #|b"\x03\x91\xec\x01\x70\x77\x38\xe0\xb0\xac\xa7\x3b\xac\x22\x53\x19"
+      #|b"\x03\x91\xec\x01pw8\xe0\xb0\xac\xa7;\xac\x22S\x19"
     ),
   )
   let plaintext_bytes = bytes_of_fixedarray_byte(random_plaintext)
@@ -147,14 +147,14 @@ test "offset parameter usage" {
   let ekey = @memory.Memory::make(Cooked_key_size, 0)
   let dkey = @memory.Memory::make(Cooked_key_size, 0)
   let nr_enc = camlpdf_rijndaelKeySetupEnc(
-    @memory.View::from_memory(ekey),
+    view_uint_of_memory(ekey),
     0,
     memory_of_fixedarray_byte(key_array),
     0,
     128,
   )
   let nr_dec = camlpdf_rijndaelKeySetupDec(
-    @memory.View::from_memory(dkey),
+    view_uint_of_memory(dkey),
     0,
     memory_of_fixedarray_byte(key_array),
     0,
@@ -163,7 +163,7 @@ test "offset parameter usage" {
 
   // Encrypt and decrypt using offset-based API
   camlpdf_rijndaelEncrypt(
-    @memory.View::from_memory(ekey),
+    view_uint_of_memory(ekey),
     0,
     nr_enc,
     memory_of_fixedarray_byte(plaintext_array),
@@ -172,7 +172,7 @@ test "offset parameter usage" {
     0,
   )
   camlpdf_rijndaelDecrypt(
-    @memory.View::from_memory(dkey),
+    view_uint_of_memory(dkey),
     0,
     nr_dec,
     memory_of_fixedarray_byte(ciphertext_array),
