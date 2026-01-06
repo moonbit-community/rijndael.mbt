@@ -4,6 +4,7 @@ A pure MoonBit implementation of the Rijndael (AES) encryption algorithm. This p
 
 ```moonbit
 // Helper functions and constants for README examples
+
 ///|
 fn fixedarray_byte_of_bytes(x : Bytes) -> FixedArray[Byte] = "%identity"
 
