@@ -25,7 +25,6 @@ test "compatibility with random data" {
     bytes_of_fixedarray_byte(random_plaintext),
     content=(
       #|b"\x03\x91\xec\x01pw8\xe0\xb0\xac\xa7;\xac\x22S\x19"
-
     ),
   )
   let plaintext_bytes = bytes_of_fixedarray_byte(random_plaintext)
