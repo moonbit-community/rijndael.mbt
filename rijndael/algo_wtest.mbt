@@ -1,4 +1,14 @@
 ///|
+fn u32_to_le_bytes(value : UInt) -> Bytes {
+  let out = FixedArray::make(4, b'\x00')
+  out[0] = value.to_byte()
+  out[1] = (value >> 8).to_byte()
+  out[2] = (value >> 16).to_byte()
+  out[3] = (value >> 24).to_byte()
+  bytes_of_fixedarray_byte(out)
+}
+
+///|
 test "basic test" {
   let key : Bytes = "0123456789ABCDEF"
   let key_fa = fixedarray_byte_of_bytes(key)
@@ -98,25 +108,25 @@ test {
   let p3 = get_u32(memory_of_fixedarray_byte(key_array), 8)
   let p4 = get_u32(memory_of_fixedarray_byte(key_array), 12)
   inspect(
-    p1.to_le_bytes(),
+    u32_to_le_bytes(p1),
     content=(
       #|b"\x33\x32\x31\x30"
     ),
   )
   inspect(
-    p2.to_le_bytes(),
+    u32_to_le_bytes(p2),
     content=(
       #|b"\x37\x36\x35\x34"
     ),
   )
   inspect(
-    p3.to_le_bytes(),
+    u32_to_le_bytes(p3),
     content=(
       #|b"\x42\x41\x39\x38"
     ),
   )
   inspect(
-    p4.to_le_bytes(),
+    u32_to_le_bytes(p4),
     content=(
       #|b"\x46\x45\x44\x43"
     ),
