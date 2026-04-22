@@ -1,0 +1,12 @@
+import {
+  "illusory0x0/memory",
+}
+
+options(
+  link: {
+    "native": {
+      "cc-flags": "-fsanitize=address -fsanitize=undefined",
+      "stub-cc-flags": "-fsanitize=address -fsanitize=undefined",
+    },
+  },
+)

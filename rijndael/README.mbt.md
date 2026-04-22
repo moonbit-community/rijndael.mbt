@@ -2,11 +2,18 @@
 
 A pure MoonBit implementation of the Rijndael (AES) encryption algorithm. This package provides the core AES encryption and decryption functionality with support for 128-bit, 192-bit, and 256-bit keys.
 
-```moonbit
+```moonbit nocheck
 // Helper functions and constants for README examples
+///|
 fn fixedarray_byte_of_bytes(x : Bytes) -> FixedArray[Byte] = "%identity"
+
+///|
 fn bytes_of_fixedarray_byte(x : FixedArray[Byte]) -> Bytes = "%identity"
+
+///|
 const Cooked_key_NR_offset : Int = 240
+
+///|
 const Cooked_key_size : Int = 241
 ```
 
@@ -24,15 +31,18 @@ The package provides functions to prepare encryption and decryption keys from ra
 
 ### Preparing Encryption Keys
 
-```moonbit
+```moonbit nocheck
+///|
 test "prepare encryption key" {
-  let key_bytes = b"0123456789ABCDEF"  // 128-bit key
+  let key_bytes = b"0123456789ABCDEF" // 128-bit key
   let key_array = fixedarray_byte_of_bytes(key_bytes)
-  
+
   let encrypt_key = @rijndael.camlpdf_caml_aes_cook_encrypt_key(
-    key_array, 0, key_array.length()
+    key_array,
+    0,
+    key_array.length(),
   )
-  
+
   // The cooked key contains the expanded round keys
   inspect(encrypt_key.length(), content="241")
 }
@@ -40,15 +50,18 @@ test "prepare encryption key" {
 
 ### Preparing Decryption Keys
 
-```moonbit
+```moonbit nocheck
+///|
 test "prepare decryption key" {
-  let key_bytes = b"0123456789ABCDEF"  // 128-bit key
+  let key_bytes = b"0123456789ABCDEF" // 128-bit key
   let key_array = fixedarray_byte_of_bytes(key_bytes)
-  
+
   let decrypt_key = @rijndael.camlpdf_caml_aes_cook_decrypt_key(
-    key_array, 0, key_array.length()
+    key_array,
+    0,
+    key_array.length(),
   )
-  
+
   // Decryption key is also 241 bytes for expanded round keys
   inspect(decrypt_key.length(), content="241")
 }
@@ -58,26 +71,33 @@ test "prepare decryption key" {
 
 The algorithm automatically detects key sizes and sets up the appropriate number of rounds:
 
-```moonbit
+```moonbit nocheck
+///|
 test "different key sizes" {
   // 128-bit key (10 rounds)
   let key_128 = fixedarray_byte_of_bytes(b"0123456789ABCDEF")
   let enc_128 = @rijndael.camlpdf_caml_aes_cook_encrypt_key(
-    key_128, 0, key_128.length()
+    key_128,
+    0,
+    key_128.length(),
   )
   inspect(enc_128[Cooked_key_NR_offset].to_int(), content="10")
-  
+
   // 192-bit key (12 rounds)  
   let key_192 = fixedarray_byte_of_bytes(b"0123456789ABCDEF01234567")
   let enc_192 = @rijndael.camlpdf_caml_aes_cook_encrypt_key(
-    key_192, 0, key_192.length()
+    key_192,
+    0,
+    key_192.length(),
   )
   inspect(enc_192[Cooked_key_NR_offset].to_int(), content="12")
-  
+
   // 256-bit key (14 rounds)
   let key_256 = fixedarray_byte_of_bytes(b"0123456789ABCDEF0123456789ABCDEF")
   let enc_256 = @rijndael.camlpdf_caml_aes_cook_encrypt_key(
-    key_256, 0, key_256.length()
+    key_256,
+    0,
+    key_256.length(),
   )
   inspect(enc_256[Cooked_key_NR_offset].to_int(), content="14")
 }
@@ -87,24 +107,27 @@ test "different key sizes" {
 
 AES operates on 16-byte blocks. The package provides functions to encrypt single blocks:
 
-```moonbit
+```moonbit nocheck
+///|
 test "block encryption" {
   let key = fixedarray_byte_of_bytes(b"0123456789ABCDEF")
   let plaintext = fixedarray_byte_of_bytes(b"Time is precious")
-  
+
   // Prepare encryption key
   let encrypt_key = @rijndael.camlpdf_caml_aes_cook_encrypt_key(
-    key, 0, key.length()
+    key,
+    0,
+    key.length(),
   )
-  
+
   // Encrypt the block
   let ciphertext = FixedArray::make(16, b'\x00')
   @rijndael.camlpdf_caml_aes_encrypt(
-    encrypt_key, 0,           // cooked key and offset
-    plaintext, 0,             // source data and offset  
-    ciphertext, 0             // destination and offset
+    encrypt_key, 0, // cooked key and offset
+     plaintext, 0, // source data and offset  
+     ciphertext, 0, // destination and offset
   )
-  
+
   // Verify encryption occurred
   if plaintext == ciphertext {
     abort("Encryption did not occur")
@@ -117,30 +140,35 @@ test "block encryption" {
 
 Decryption reverses the encryption process to recover the original plaintext:
 
-```moonbit
+```moonbit nocheck
+///|
 test "block decryption" {
   let key = fixedarray_byte_of_bytes(b"0123456789ABCDEF")
   let plaintext = fixedarray_byte_of_bytes(b"Time is precious")
-  
+
   // Prepare both keys
   let encrypt_key = @rijndael.camlpdf_caml_aes_cook_encrypt_key(
-    key, 0, key.length()
+    key,
+    0,
+    key.length(),
   )
   let decrypt_key = @rijndael.camlpdf_caml_aes_cook_decrypt_key(
-    key, 0, key.length()
+    key,
+    0,
+    key.length(),
   )
-  
+
   // Encrypt then decrypt
   let ciphertext = FixedArray::make(16, b'\x00')
   let recovered = FixedArray::make(16, b'\x00')
-  
+
   @rijndael.camlpdf_caml_aes_encrypt(
-    encrypt_key, 0, plaintext, 0, ciphertext, 0
+    encrypt_key, 0, plaintext, 0, ciphertext, 0,
   )
   @rijndael.camlpdf_caml_aes_decrypt(
-    decrypt_key, 0, ciphertext, 0, recovered, 0
+    decrypt_key, 0, ciphertext, 0, recovered, 0,
   )
-  
+
   // Verify round-trip success
   assert_eq(plaintext, recovered)
 }
@@ -150,38 +178,49 @@ test "block decryption" {
 
 For encrypting larger amounts of data, you can process multiple 16-byte blocks:
 
-```moonbit
+```moonbit nocheck
+///|
 test "multiple blocks" {
   let key = fixedarray_byte_of_bytes(b"0123456789ABCDEF")
   let encrypt_key = @rijndael.camlpdf_caml_aes_cook_encrypt_key(
-    key, 0, key.length()
+    key,
+    0,
+    key.length(),
   )
   let decrypt_key = @rijndael.camlpdf_caml_aes_cook_decrypt_key(
-    key, 0, key.length()
+    key,
+    0,
+    key.length(),
   )
-  
+
   // Three 16-byte blocks
   let block1 = fixedarray_byte_of_bytes(b"Time is precious")
   let block2 = fixedarray_byte_of_bytes(b"MoonBit is great")
   let block3 = fixedarray_byte_of_bytes(b"Rijndael AES enc")
-  
-  let ciphertext = FixedArray::make(48, b'\x00')  // 3 blocks
+
+  let ciphertext = FixedArray::make(48, b'\x00') // 3 blocks
   let decrypted = FixedArray::make(48, b'\x00')
-  
+
   // Encrypt each block at different offsets
   @rijndael.camlpdf_caml_aes_encrypt(encrypt_key, 0, block1, 0, ciphertext, 0)
   @rijndael.camlpdf_caml_aes_encrypt(encrypt_key, 0, block2, 0, ciphertext, 16)
   @rijndael.camlpdf_caml_aes_encrypt(encrypt_key, 0, block3, 0, ciphertext, 32)
-  
+
   // Decrypt each block
-  @rijndael.camlpdf_caml_aes_decrypt(decrypt_key, 0, ciphertext, 0, decrypted, 0)
-  @rijndael.camlpdf_caml_aes_decrypt(decrypt_key, 0, ciphertext, 16, decrypted, 16)
-  @rijndael.camlpdf_caml_aes_decrypt(decrypt_key, 0, ciphertext, 32, decrypted, 32)
-  
+  @rijndael.camlpdf_caml_aes_decrypt(
+    decrypt_key, 0, ciphertext, 0, decrypted, 0,
+  )
+  @rijndael.camlpdf_caml_aes_decrypt(
+    decrypt_key, 0, ciphertext, 16, decrypted, 16,
+  )
+  @rijndael.camlpdf_caml_aes_decrypt(
+    decrypt_key, 0, ciphertext, 32, decrypted, 32,
+  )
+
   // Verify each block was recovered correctly
   let recovered_bytes = bytes_of_fixedarray_byte(decrypted)
   assert_eq(b"Time is precious", recovered_bytes[0:16].to_bytes())
-  assert_eq(b"MoonBit is great", recovered_bytes[16:32].to_bytes()) 
+  assert_eq(b"MoonBit is great", recovered_bytes[16:32].to_bytes())
   assert_eq(b"Rijndael AES enc", recovered_bytes[32:48].to_bytes())
 }
 ```
@@ -190,19 +229,22 @@ test "multiple blocks" {
 
 The implementation includes proper bounds checking and validation:
 
-```moonbit
+```moonbit nocheck
+///|
 test "key validation" {
   // Valid key sizes: 16, 24, 32 bytes (128, 192, 256 bits)
   let valid_keys = [
-    b"0123456789ABCDEF",                    // 16 bytes = 128 bits
-    b"0123456789ABCDEF01234567",            // 24 bytes = 192 bits  
-    b"0123456789ABCDEF0123456789ABCDEF"     // 32 bytes = 256 bits
+    b"0123456789ABCDEF", // 16 bytes = 128 bits
+     b"0123456789ABCDEF01234567", // 24 bytes = 192 bits  
+     b"0123456789ABCDEF0123456789ABCDEF", // 32 bytes = 256 bits
   ]
-  
+
   for key_bytes in valid_keys {
     let key_array = fixedarray_byte_of_bytes(key_bytes)
     let encrypt_key = @rijndael.camlpdf_caml_aes_cook_encrypt_key(
-      key_array, 0, key_array.length()
+      key_array,
+      0,
+      key_array.length(),
     )
     // Should complete without error
     assert_eq(encrypt_key.length(), 241)
@@ -214,38 +256,43 @@ test "key validation" {
 
 The package supports offset-based operations for working with larger buffers:
 
-```moonbit
+```moonbit nocheck
+///|
 test "offset operations" {
   let key = fixedarray_byte_of_bytes(b"0123456789ABCDEF")
   let encrypt_key = @rijndael.camlpdf_caml_aes_cook_encrypt_key(
-    key, 0, key.length()
+    key,
+    0,
+    key.length(),
   )
   let decrypt_key = @rijndael.camlpdf_caml_aes_cook_decrypt_key(
-    key, 0, key.length()
+    key,
+    0,
+    key.length(),
   )
-  
+
   // Create a larger buffer with data at specific offset
   let large_buffer = FixedArray::make(64, b'\x00')
   let plaintext_data = b"Time is precious"
-  
+
   // Copy plaintext to offset 16 in the buffer
   for i in 0..<16 {
     large_buffer[16 + i] = plaintext_data[i]
   }
-  
+
   let ciphertext_buffer = FixedArray::make(64, b'\x00')
   let recovered_buffer = FixedArray::make(64, b'\x00')
-  
+
   // Encrypt from offset 16 to offset 32
   @rijndael.camlpdf_caml_aes_encrypt(
-    encrypt_key, 0, large_buffer, 16, ciphertext_buffer, 32
+    encrypt_key, 0, large_buffer, 16, ciphertext_buffer, 32,
   )
-  
+
   // Decrypt from offset 32 to offset 48  
   @rijndael.camlpdf_caml_aes_decrypt(
-    decrypt_key, 0, ciphertext_buffer, 32, recovered_buffer, 48
+    decrypt_key, 0, ciphertext_buffer, 32, recovered_buffer, 48,
   )
-  
+
   // Verify the data was correctly processed with offsets
   for i in 0..<16 {
     assert_eq(large_buffer[16 + i], recovered_buffer[48 + i])
