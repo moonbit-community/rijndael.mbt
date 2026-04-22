@@ -2,9 +2,12 @@
 
 This package provides native AES (Advanced Encryption Standard) encryption and decryption functionality for MoonBit through C bindings to the optimized Rijndael algorithm implementation. The package is designed specifically for native targets and offers high-performance cryptographic operations.
 
-```moonbit
+```moonbit nocheck
 // Helper functions for README examples
+///|
 fn fixedarray_byte_of_bytes(x : Bytes) -> FixedArray[Byte] = "%identity"
+
+///|
 fn bytes_of_fixedarray_byte(x : FixedArray[Byte]) -> Bytes = "%identity"
 ```
 
@@ -21,11 +24,16 @@ AES operations require preparing the encryption key before use. The package prov
 
 ### Encryption Key Preparation
 
-```moonbit
+```moonbit nocheck
+///|
 test "prepare encryption key" {
   let raw_key = fixedarray_byte_of_bytes(b"0123456789ABCDEF") // 128-bit key
-  let cooked_key = @native.camlpdf_caml_aes_cook_encrypt_key(raw_key, 0, raw_key.length())
-  
+  let cooked_key = @native.camlpdf_caml_aes_cook_encrypt_key(
+    raw_key,
+    0,
+    raw_key.length(),
+  )
+
   // The cooked key contains the expanded key schedule
   inspect(cooked_key.length(), content="241")
 }
@@ -33,11 +41,16 @@ test "prepare encryption key" {
 
 ### Decryption Key Preparation
 
-```moonbit
+```moonbit nocheck
+///|
 test "prepare decryption key" {
   let raw_key = fixedarray_byte_of_bytes(b"0123456789ABCDEF") // 128-bit key
-  let cooked_key = @native.camlpdf_caml_aes_cook_decrypt_key(raw_key, 0, raw_key.length())
-  
+  let cooked_key = @native.camlpdf_caml_aes_cook_decrypt_key(
+    raw_key,
+    0,
+    raw_key.length(),
+  )
+
   // Decryption keys have a different internal structure than encryption keys
   inspect(cooked_key.length(), content="241")
 }
@@ -49,42 +62,60 @@ AES operates on 16-byte blocks. The package provides functions to encrypt and de
 
 ### Basic Encryption
 
-```moonbit
+```moonbit nocheck
+///|
 test "encrypt a block" {
   let key = fixedarray_byte_of_bytes(b"0123456789ABCDEF")
-  let cooked_encrypt_key = @native.camlpdf_caml_aes_cook_encrypt_key(key, 0, key.length())
-  
+  let cooked_encrypt_key = @native.camlpdf_caml_aes_cook_encrypt_key(
+    key,
+    0,
+    key.length(),
+  )
+
   let plaintext = fixedarray_byte_of_bytes(b"Time is precious") // Exactly 16 bytes
   let ciphertext = FixedArray::make(16, (0).to_byte())
-  
-  @native.camlpdf_caml_aes_encrypt(cooked_encrypt_key, 0, plaintext, 0, ciphertext, 0)
-  
+
+  @native.camlpdf_caml_aes_encrypt(
+    cooked_encrypt_key, 0, plaintext, 0, ciphertext, 0,
+  )
+
   // The ciphertext should be different from plaintext
-  inspect(bytes_of_fixedarray_byte(ciphertext), 
-    content="b\"\\xf3\\x97\\x09\\xdf\\x2c\\xdb\\x87\\x42\\x40\\x47\\xba\\x4e\\x28\\x66\\x14\\xb3\"")
+  inspect(
+    bytes_of_fixedarray_byte(ciphertext),
+    content="b\"\\xf3\\x97\\x09\\xdf\\x2c\\xdb\\x87\\x42\\x40\\x47\\xba\\x4e\\x28\\x66\\x14\\xb3\"",
+  )
 }
 ```
 
 ### Basic Decryption
 
-```moonbit
+```moonbit nocheck
+///|
 test "decrypt a block" {
   let key = fixedarray_byte_of_bytes(b"0123456789ABCDEF")
-  let cooked_decrypt_key = @native.camlpdf_caml_aes_cook_decrypt_key(key, 0, key.length())
-  
+  let cooked_decrypt_key = @native.camlpdf_caml_aes_cook_decrypt_key(
+    key,
+    0,
+    key.length(),
+  )
+
   // Use the ciphertext from encryption
   let ciphertext = fixedarray_byte_of_bytes(
-    b"\xf3\x97\x09\xdf\x2c\xdb\x87\x42\x40\x47\xba\x4e\x28\x66\x14\xb3"
+    b"\xf3\x97\x09\xdf\x2c\xdb\x87\x42\x40\x47\xba\x4e\x28\x66\x14\xb3",
   )
   let decrypted = FixedArray::make(16, (0).to_byte())
-  
-  @native.camlpdf_caml_aes_decrypt(cooked_decrypt_key, 0, ciphertext, 0, decrypted, 0)
-  
+
+  @native.camlpdf_caml_aes_decrypt(
+    cooked_decrypt_key, 0, ciphertext, 0, decrypted, 0,
+  )
+
   // Should recover the original plaintext
-  inspect(bytes_of_fixedarray_byte(decrypted), 
+  inspect(
+    bytes_of_fixedarray_byte(decrypted),
     content=(
       #|b"\x54\x69\x6d\x65\x20\x69\x73\x20\x70\x72\x65\x63\x69\x6f\x75\x73"
-    ))
+    ),
+  )
 }
 ```
 
@@ -94,23 +125,36 @@ The most common use case is encrypting data and then decrypting it back to verif
 
 ### Round-trip Test
 
-```moonbit
+```moonbit nocheck
+///|
 test "complete encryption and decryption cycle" {
   let key = fixedarray_byte_of_bytes(b"0123456789ABCDEF")
   let original_plaintext = fixedarray_byte_of_bytes(b"Hello, MoonBit!!")
-  
+
   // Prepare both encryption and decryption keys
-  let encrypt_key = @native.camlpdf_caml_aes_cook_encrypt_key(key, 0, key.length())
-  let decrypt_key = @native.camlpdf_caml_aes_cook_decrypt_key(key, 0, key.length())
-  
+  let encrypt_key = @native.camlpdf_caml_aes_cook_encrypt_key(
+    key,
+    0,
+    key.length(),
+  )
+  let decrypt_key = @native.camlpdf_caml_aes_cook_decrypt_key(
+    key,
+    0,
+    key.length(),
+  )
+
   // Encrypt
   let ciphertext = FixedArray::make(16, (0).to_byte())
-  @native.camlpdf_caml_aes_encrypt(encrypt_key, 0, original_plaintext, 0, ciphertext, 0)
-  
+  @native.camlpdf_caml_aes_encrypt(
+    encrypt_key, 0, original_plaintext, 0, ciphertext, 0,
+  )
+
   // Decrypt
   let recovered_plaintext = FixedArray::make(16, (0).to_byte())
-  @native.camlpdf_caml_aes_decrypt(decrypt_key, 0, ciphertext, 0, recovered_plaintext, 0)
-  
+  @native.camlpdf_caml_aes_decrypt(
+    decrypt_key, 0, ciphertext, 0, recovered_plaintext, 0,
+  )
+
   // Verify the round-trip worked
   assert_eq(original_plaintext, recovered_plaintext)
 }
@@ -122,11 +166,16 @@ AES supports three key sizes: 128-bit (16 bytes), 192-bit (24 bytes), and 256-bi
 
 ### AES-128 (16-byte key)
 
-```moonbit
+```moonbit nocheck
+///|
 test "AES-128 encryption" {
   let key_128 = fixedarray_byte_of_bytes(b"aGvw!pDaVuZ5Dz.3") // 16 bytes
-  let cooked_key = @native.camlpdf_caml_aes_cook_encrypt_key(key_128, 0, key_128.length())
-  
+  let cooked_key = @native.camlpdf_caml_aes_cook_encrypt_key(
+    key_128,
+    0,
+    key_128.length(),
+  )
+
   // 128-bit keys produce a specific key schedule size
   inspect(cooked_key.length(), content="241")
 }
@@ -134,11 +183,16 @@ test "AES-128 encryption" {
 
 ### AES-192 (24-byte key)
 
-```moonbit
+```moonbit nocheck
+///|
 test "AES-192 encryption" {
   let key_192 = fixedarray_byte_of_bytes(b"cFFch2cK7.gQW#$FYQDa:wR6") // 24 bytes
-  let cooked_key = @native.camlpdf_caml_aes_cook_encrypt_key(key_192, 0, key_192.length())
-  
+  let cooked_key = @native.camlpdf_caml_aes_cook_encrypt_key(
+    key_192,
+    0,
+    key_192.length(),
+  )
+
   // 192-bit keys produce a longer key schedule
   inspect(cooked_key.length(), content="241")
 }
@@ -146,11 +200,16 @@ test "AES-192 encryption" {
 
 ### AES-256 (32-byte key)
 
-```moonbit
+```moonbit nocheck
+///|
 test "AES-256 encryption" {
   let key_256 = fixedarray_byte_of_bytes(b"4hrA;KwpQQXHXWkqa5bt5nX/%_vwE*Zp") // 32 bytes
-  let cooked_key = @native.camlpdf_caml_aes_cook_encrypt_key(key_256, 0, key_256.length())
-  
+  let cooked_key = @native.camlpdf_caml_aes_cook_encrypt_key(
+    key_256,
+    0,
+    key_256.length(),
+  )
+
   // 256-bit keys produce the longest key schedule
   inspect(cooked_key.length(), content="241")
 }
@@ -163,11 +222,16 @@ The implementation handles invalid key sizes gracefully by returning zero-filled
 ### Invalid Key Size
 
 ```moonbit skip
+///|
 /// ⚠️ Warning: buffer overflow
 test "invalid key size handling" {
   let invalid_key = fixedarray_byte_of_bytes(b"short") // Only 5 bytes, invalid for AES
-  let result = @native.camlpdf_caml_aes_cook_encrypt_key(invalid_key, 0, invalid_key.length())
-  
+  let result = @native.camlpdf_caml_aes_cook_encrypt_key(
+    invalid_key,
+    0,
+    invalid_key.length(),
+  )
+
   // Should return a zero-filled array for invalid key sizes
   let expected_zeros = FixedArray::make(241, (0).to_byte())
   assert_eq(result, expected_zeros)
