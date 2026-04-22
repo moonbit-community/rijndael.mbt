@@ -83,6 +83,16 @@ fn aes_test_driver(
 }
 
 ///|
+fn u32_to_le_bytes(value : UInt) -> Bytes {
+  Bytes::from_array([
+    value.reinterpret_as_int().to_byte(),
+    (value >> 8).reinterpret_as_int().to_byte(),
+    (value >> 16).reinterpret_as_int().to_byte(),
+    (value >> 24).reinterpret_as_int().to_byte(),
+  ])
+}
+
+///|
 test "AES test driver" {
   let key : Bytes = b"0123456789ABCDEF"
   let plaintext : Bytes = b"Time is precious"
@@ -98,25 +108,25 @@ test {
   let p3 = get_u32(memory_of_fixedarray_byte(key_array), 8)
   let p4 = get_u32(memory_of_fixedarray_byte(key_array), 12)
   inspect(
-    p1.to_le_bytes(),
+    u32_to_le_bytes(p1),
     content=(
       #|b"\x33\x32\x31\x30"
     ),
   )
   inspect(
-    p2.to_le_bytes(),
+    u32_to_le_bytes(p2),
     content=(
       #|b"\x37\x36\x35\x34"
     ),
   )
   inspect(
-    p3.to_le_bytes(),
+    u32_to_le_bytes(p3),
     content=(
       #|b"\x42\x41\x39\x38"
     ),
   )
   inspect(
-    p4.to_le_bytes(),
+    u32_to_le_bytes(p4),
     content=(
       #|b"\x46\x45\x44\x43"
     ),
