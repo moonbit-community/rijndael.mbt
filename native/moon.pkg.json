@@ -1,4 +1,5 @@
 {
+  "import": ["moonbitlang/core/random"],
   "native-stub": ["stub.c", "rijndael-alg-fst.c"],
   "targets": {
     "stub.mbt": ["native"]
