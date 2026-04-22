@@ -136,7 +136,7 @@ fn camlpdf_rijndaelKeySetupDec(
   // apply the inverse MixColumn transform to all round keys but the first and the last
 
   let mut offset = 0
-  for i in 1..<nr {
+  for _ in 1..<nr {
     offset += 4
     // unroll loop
     rk[offset + 0] = td0[idx(te4[idx(rk[offset + 0] >> 24)] & 0xff)] ^
