@@ -1,7 +1,7 @@
 ///|
 test "compatibility with random data" {
   // Test with random-like plaintext similar to native package
-  let key : Bytes = "0123456789ABCDEF"
+  let key : Bytes = b"0123456789ABCDEF"
 
   // Manually create some "random" data for deterministic test
   let random_plaintext = FixedArray::make(16, b'\x00')
@@ -90,7 +90,7 @@ test "key schedule round counts" {
 
 ///|
 test "multiple block encryption/decryption" {
-  let key : Bytes = "0123456789ABCDEF"
+  let key : Bytes = b"0123456789ABCDEF"
   let key_fa = fixedarray_byte_of_bytes(key)
   let encrypt_cooked = camlpdf_caml_aes_cook_encrypt_key(
     key_fa,
@@ -104,9 +104,9 @@ test "multiple block encryption/decryption" {
   )
 
   // Test multiple 16-byte blocks
-  let plaintext1 : Bytes = "Time is precious"
-  let plaintext2 : Bytes = "MoonBit is great"
-  let plaintext3 : Bytes = "Rijndael AES enc"
+  let plaintext1 : Bytes = b"Time is precious"
+  let plaintext2 : Bytes = b"MoonBit is great"
+  let plaintext3 : Bytes = b"Rijndael AES enc"
   let ciphertext = FixedArray::make(48, b'\x00') // 3 blocks
   let decrypted = FixedArray::make(48, b'\x00')
 
@@ -134,8 +134,8 @@ test "multiple block encryption/decryption" {
 
 ///|
 test "offset parameter usage" {
-  let key : Bytes = "0123456789ABCDEF"
-  let plaintext : Bytes = "Time is precious"
+  let key : Bytes = b"0123456789ABCDEF"
+  let plaintext : Bytes = b"Time is precious"
 
   // Test using the new API directly with offsets
   let key_array = fixedarray_byte_of_bytes(key)
