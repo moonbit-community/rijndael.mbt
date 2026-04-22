@@ -1,6 +1,6 @@
 ///|
 test "basic test" {
-  let key : Bytes = "0123456789ABCDEF"
+  let key : Bytes = b"0123456789ABCDEF"
   let key_fa = fixedarray_byte_of_bytes(key)
   let encrypt_cooked = camlpdf_caml_aes_cook_encrypt_key(
     key_fa,
@@ -28,7 +28,7 @@ test "basic test" {
   inspect(decrypt_cooked.length(), content="241")
 
   // 16 bytes
-  let plaintext : Bytes = "Time is precious"
+  let plaintext : Bytes = b"Time is precious"
   inspect(plaintext.length(), content="16")
   inspect(
     plaintext,
@@ -84,14 +84,14 @@ fn aes_test_driver(
 
 ///|
 test "AES test driver" {
-  let key : Bytes = "0123456789ABCDEF"
-  let plaintext : Bytes = "Time is precious"
+  let key : Bytes = b"0123456789ABCDEF"
+  let plaintext : Bytes = b"Time is precious"
   aes_test_driver(key, plaintext)
 }
 
 ///|
 test {
-  let key : Bytes = "0123456789ABCDEF"
+  let key : Bytes = b"0123456789ABCDEF"
   let key_array = fixedarray_byte_of_bytes(key)
   let p1 = get_u32(memory_of_fixedarray_byte(key_array), 0)
   let p2 = get_u32(memory_of_fixedarray_byte(key_array), 4)
