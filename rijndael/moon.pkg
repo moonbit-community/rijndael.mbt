@@ -1,3 +1,4 @@
 import {
+  "moonbitlang/core/debug",
   "illusory0x0/memory",
 }

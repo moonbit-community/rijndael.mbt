@@ -127,9 +127,9 @@ test "multiple block encryption/decryption" {
 
   // Verify each block - convert back to bytes for comparison
   let decrypted_bytes = bytes_of_fixedarray_byte(decrypted)
-  assert_eq(plaintext1, decrypted_bytes[0:16].to_bytes())
-  assert_eq(plaintext2, decrypted_bytes[16:32].to_bytes())
-  assert_eq(plaintext3, decrypted_bytes[32:48].to_bytes())
+  @debug.assert_eq(plaintext1, decrypted_bytes[0:16].to_owned())
+  @debug.assert_eq(plaintext2, decrypted_bytes[16:32].to_owned())
+  @debug.assert_eq(plaintext3, decrypted_bytes[32:48].to_owned())
 }
 
 ///|
@@ -182,7 +182,7 @@ test "offset parameter usage" {
   )
 
   // Verify results
-  assert_eq(plaintext_array, decrypted_array)
+  @debug.assert_eq(plaintext_array, decrypted_array)
   inspect(nr_enc, content="10") // 128-bit key should have 10 rounds
   inspect(nr_dec, content="10")
 }

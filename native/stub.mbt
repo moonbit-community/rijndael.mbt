@@ -66,14 +66,14 @@ fn aes_test_driver(
   cipher_key : FixedArray[Byte],
   plaintext : FixedArray[Byte],
   loc~ : SourceLoc,
-) -> Unit raise Error {
+) -> Unit raise {
   let encrypt_cooked = encrypt_key(cipher_key)
   let decrypt_cooked = decrypt_key(cipher_key)
   let ciphertext = FixedArray::make(16, (0).to_byte())
   camlpdf_caml_aes_encrypt(encrypt_cooked, 0, plaintext, 0, ciphertext, 0)
   let decrypted = FixedArray::make(16, (0).to_byte())
   camlpdf_caml_aes_decrypt(decrypt_cooked, 0, ciphertext, 0, decrypted, 0)
-  assert_eq(plaintext, decrypted)
+  @debug.assert_eq(plaintext, decrypted)
 }
 
 ///|
@@ -132,7 +132,7 @@ test "basic test" {
       #|b"Time is precious"
     ),
   )
-  assert_eq(plaintext, decrypted)
+  @debug.assert_eq(plaintext, decrypted)
 }
 
 ///|
